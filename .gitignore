@@ -1,0 +1,7 @@
+.make.state.Debug
+.dep.inc
+Makefile
+nbproject/
+build/
+dist/
+out.txt
