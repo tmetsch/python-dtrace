@@ -63,6 +63,7 @@ main(int argc, char** argv)
 	char *script = "dtrace:::BEGIN {trace(\"Hello World\");}";
 
 	prog = dtrace_program_strcompile(handle, script, DTRACE_PROBESPEC_NAME, DTRACE_C_ZDEFS, 0, NULL);
+	fprintf(stderr, "%d", DTRACE_C_ZDEFS);
 	if (prog == NULL) {
 		fprintf(stderr, "Unable to compile d script: %s\n", dtrace_errmsg(NULL, err));
 	}
