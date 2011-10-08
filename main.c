@@ -40,28 +40,27 @@ buffered(const dtrace_bufdata_t *bufdata, void *arg)
 static int
 walk(const dtrace_aggdata_t *data, void *arg)
 {
-        dtrace_aggdesc_t *aggdesc = data->dtada_desc;
-        dtrace_recdesc_t *nrec, *irec;
-        char *name;
-        int32_t *instance;
-        static const dtrace_aggdata_t *count;
+	dtrace_aggdesc_t *aggdesc = data->dtada_desc;
+	dtrace_recdesc_t *nrec, *irec;
+	char *name;
+	int32_t *instance;
+	static const dtrace_aggdata_t *count;
 
-        if (count == NULL) {
-                count = data;
-                return (DTRACE_AGGWALK_NEXT);
-        }
+	if (count == NULL) {
+		count = data;
+		return (DTRACE_AGGWALK_NEXT);
+	}
 
-        nrec = &aggdesc->dtagd_rec[1];
-        irec = &aggdesc->dtagd_rec[2];
+	nrec = &aggdesc->dtagd_rec[1];
+	irec = &aggdesc->dtagd_rec[2];
 
-        name = data->dtada_data + nrec->dtrd_offset;
-        instance = (int32_t *)(data->dtada_data + irec->dtrd_offset);
+	name = data->dtada_data + nrec->dtrd_offset;
+	instance = (int32_t *) (data->dtada_data + irec->dtrd_offset);
 
-        fprintf(stderr, "+--> In walk: %-20s %-10d\n", name, *instance);
+	fprintf(stderr, "+--> In walk: %-20s %-10d\n", name, *instance);
 
-        return (DTRACE_AGGWALK_NEXT);
+	return (DTRACE_AGGWALK_NEXT);
 }
-
 
 /*
  * there we go...
@@ -115,8 +114,11 @@ main(int argc, char** argv)
 	} while (i < 10);
 	dtrace_stop(handle);
 
+	if (dtrace_aggregate_snap(handle) != 0)
+		printf("failed to add to aggregate\n");
+
 	// Instead of print -> we'll walk...dtrace_aggregate_print(handle, stdout, NULL);
-	if (dtrace_aggregate_walk(handle, walk, NULL) != 0) {
+	if (dtrace_aggregate_walk_valsorted(handle, walk, NULL) != 0) {
 		fprintf(stderr, "Unable to append walker: %s\n", dtrace_errmsg(NULL, err));
 	}
 
