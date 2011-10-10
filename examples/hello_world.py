@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 '''
-Use the Python DTrace consumer and run a Hello World DTrace SCRIPT.
+Use the Python DTrace consumer and run a Hello World DTrace script.
 
 Created on Oct 10, 2011
 

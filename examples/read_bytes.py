@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 '''
-Use the Python DTrace consumer and run a syscall counter DTrace script.
+Use the Python DTrace consumer and sum the num of bytes read..
 
 Created on Oct 10, 2011
 
@@ -10,13 +10,15 @@ Created on Oct 10, 2011
 
 from dtrace.consumer import DTraceConsumer
 
-SCRIPT = 'syscall:::entry { @num[execname] = count(); }'
+SCRIPT = 'sysinfo:::readch { @bytes[execname] = sum(arg0); }'
 
 
 def main():
     '''
     Run DTrace...
     '''
+    print 'Hint: if you don\'t get any output try running it with pfexec...'
+
     consumer = DTraceConsumer()
     consumer.run_script(SCRIPT, 4)
 

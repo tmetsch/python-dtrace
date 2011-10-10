@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 '''
-Use the Python DTrace consumer and run a syscall counter DTrace SCRIPT.
+Use the Python DTrace consumer and run a syscall counter DTrace script with an
+own aggregate walk function.
 
 Created on Oct 10, 2011
 

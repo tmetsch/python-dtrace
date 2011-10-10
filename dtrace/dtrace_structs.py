@@ -13,11 +13,17 @@ Created on Oct 10, 2011
 from ctypes import Structure, c_int, c_void_p, c_char_p, c_char, c_uint
 
 
+class dtrace_recdesc(Structure):
+    '''
+    sys/dtrace.h:931
+    '''
+    _fields_ = [("dtrd_offset", c_uint)]
+
 class dtrace_aggdesc(Structure):
     '''
-    TODO - use offset
+    sys/dtrace.h:950
     '''
-    _fields_ = [("dtagd_flags", c_int)]
+    _fields_ = [("dtagd_rec", c_void_p)]
 
 
 class dtrace_aggdata(Structure):

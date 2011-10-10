@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 '''
-Use the Python DTrace consumer and run a syscall counter DTrace script.
+Use the Python DTrace consumer as a Thread and run a syscall counter DTrace
+script.
 
 Created on Oct 10, 2011
 
