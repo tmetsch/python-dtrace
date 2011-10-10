@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 '''
-Use the Python DTrace consumer and sum the num of bytes read..
+Use the Python DTrace consumer and sum the num of bytes read.
 
 Created on Oct 10, 2011
 

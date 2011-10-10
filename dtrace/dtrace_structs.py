@@ -19,6 +19,7 @@ class dtrace_recdesc(Structure):
     '''
     _fields_ = [("dtrd_offset", c_uint)]
 
+
 class dtrace_aggdesc(Structure):
     '''
     sys/dtrace.h:950
@@ -77,10 +78,3 @@ class dtrace_probedata(Structure):
                ("dtpda_flow", c_void_p),
                ("dtpda_prefix", c_void_p),
                ("dtpda_indent", c_int)]
-
-
-class dtrace_recdesc(Structure):
-    '''
-    As defined in sys/dtrace.h:931
-    '''
-    pass

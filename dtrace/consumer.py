@@ -66,14 +66,10 @@ def simple_buffered_out_writer(bufdata, arg):
 
 def simple_walk(data, arg):
     '''
-    Aggregate walker.
+    Aggregate walker capable of reading a name and one value.
     '''
 
     # TODO: pickup the 16 and 272 from offset in desc...
-
-#    print dir(deref(data.contents.dtada_desc.dtagd_rec, dtrace_recdesc))
-#    foo = deref(data.contents.dtada_desc.dtagd_rec, dtrace_recdesc)
-#    print dir(foo), foo.contents.dtrd_offset
 
     tmp = data.contents.dtada_data
     name = cast(tmp + 16, c_char_p).value
