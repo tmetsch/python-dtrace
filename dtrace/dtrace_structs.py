@@ -6,8 +6,9 @@ Created on Oct 10, 2011
 @author: tmetsch
 '''
 
-# disabling 'too few public meth' pylint check
-# pylint: disable=R0903
+# disabling 'too few public meth' pylint check (R0903)
+# disabling 'Invalid name' pylint check (C0103)
+# pylint: disable=R0903,C0103
 
 from ctypes import Structure, c_int, c_void_p, c_char_p, c_char, c_uint
 
@@ -40,7 +41,7 @@ class dtrace_bufdata(Structure):
     As defined in dtrace.h:310
     '''
     _fields_ = [("dtbda_handle", c_void_p),
-                ("dtbda_buffered", c_char_p), # works
+                ("dtbda_buffered", c_char_p),
                 ("dtbda_probe", c_void_p),
                 ("dtbda_recdesc", c_void_p),
                 ("dtbda_aggdata", c_void_p),
@@ -65,7 +66,7 @@ class dtrace_probedata(Structure):
     _fields_ = [("dtpda_handle", c_void_p),
                ("dtpda_edesc", c_void_p),
                ("dtpda_pdesc", dtrace_probedesc),
-               ("dtpda_cpu", c_int), # works
+               ("dtpda_cpu", c_int),
                ("dtpda_data", c_void_p),
                ("dtpda_flow", c_void_p),
                ("dtpda_prefix", c_void_p),

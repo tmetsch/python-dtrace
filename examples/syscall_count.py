@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 '''
-Use the Python DTrace consumer and run a syscall counter DTrace script.
+Use the Python DTrace consumer and run a syscall counter DTrace SCRIPT.
 
 Created on Oct 10, 2011
 
@@ -10,11 +10,15 @@ Created on Oct 10, 2011
 
 from dtrace.consumer import DTraceConsumer
 
-script = 'syscall:::entry { @num[execname] = count(); }'
+SCRIPT = 'syscall:::entry { @num[execname] = count(); }'
+
 
 def main():
+    '''
+    Run DTrace...
+    '''
     consumer = DTraceConsumer()
-    consumer.run_script(script, 4)
+    consumer.run_script(SCRIPT, 4)
 
 if __name__ == '__main__':
     main()

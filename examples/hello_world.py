@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 '''
-Use the Python DTrace consumer and run a Hello World DTrace script.
+Use the Python DTrace consumer and run a Hello World DTrace SCRIPT.
 
 Created on Oct 10, 2011
 
@@ -10,11 +10,15 @@ Created on Oct 10, 2011
 
 from dtrace.consumer import DTraceConsumer
 
-script = 'dtrace:::BEGIN {trace("Hello World");}'
+SCRIPT = 'dtrace:::BEGIN {trace("Hello World");}'
+
 
 def main():
+    '''
+    Run DTrace...
+    '''
     consumer = DTraceConsumer()
-    consumer.run_script(script)
+    consumer.run_script(SCRIPT)
 
 if __name__ == '__main__':
     main()
