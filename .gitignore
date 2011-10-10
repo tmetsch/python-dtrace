@@ -6,3 +6,4 @@ nbproject/
 build/
 dist/
 out.txt
+*.pyc
