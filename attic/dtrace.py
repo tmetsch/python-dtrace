@@ -45,7 +45,7 @@ class dtrace_bufdata(Structure):
     As defined in dtrace.h:310
     '''
     _fields_ = [("dtbda_handle", c_void_p),
-                ("dtbda_buffered", c_char_p),       # works
+                ("dtbda_buffered", c_char_p), # works
                 ("dtbda_probe", c_void_p),
                 ("dtbda_recdesc", c_void_p),
                 ("dtbda_aggdata", c_void_p),
@@ -70,7 +70,7 @@ class dtrace_probedata(Structure):
     _fields_ = [("dtpda_handle", c_void_p),
                ("dtpda_edesc", c_void_p),
                ("dtpda_pdesc", dtrace_probedesc),
-               ("dtpda_cpu", c_int),                # works
+               ("dtpda_cpu", c_int), # works
                ("dtpda_data", c_void_p),
                ("dtpda_flow", c_void_p),
                ("dtpda_prefix", c_void_p),
@@ -126,12 +126,12 @@ def chewrec_func(data, rec, arg):
     return 0
 
 
-def out(bufdata, arg):
+def buffered_stdout_writer(bufdata, arg):
     '''
     In case dtrace_work is given None as filename - this one is called.
     '''
     tmp = c_char_p(bufdata.contents.dtbda_buffered).value.strip()
-    print '  +--> In out: ', tmp
+    print '  +--> In buffered_stdout_writer: ', tmp
     return 0
 
 
@@ -167,7 +167,7 @@ def run_dtrace():
         raise Exception(c_char_p(txt).value)
 
     # callbacks
-    buf_func = BUFFERED_FUNC(out)
+    buf_func = BUFFERED_FUNC(buffered_stdout_writer)
     LIBRARY.dtrace_handle_buffered(handle, buf_func, None)
 
     # compile
