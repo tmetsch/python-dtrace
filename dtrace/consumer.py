@@ -17,7 +17,7 @@ cdll.LoadLibrary("libdtrace.so")
 LIBRARY = CDLL("libdtrace.so")
 
 
-def chew_func(data, arg):
+def simple_chew_func(data, arg):
     '''
     Callback for chew.
     '''
@@ -25,7 +25,7 @@ def chew_func(data, arg):
     return 0
 
 
-def chewrec_func(data, rec, arg):
+def simple_chewrec_func(data, rec, arg):
     '''
     Callback for record chewing.
     '''
@@ -34,7 +34,7 @@ def chewrec_func(data, rec, arg):
     return 0
 
 
-def buffered_stdout_writer(bufdata, arg):
+def simple_buffered_out_writer(bufdata, arg):
     '''
     In case dtrace_work is given None as filename - this one is called.
     '''
@@ -43,7 +43,7 @@ def buffered_stdout_writer(bufdata, arg):
     return 0
 
 
-def walk(data, arg):
+def simple_walk(data, arg):
     '''
     Aggregate walker.
     '''
@@ -65,6 +65,7 @@ def deref(addr, typ):
     '''
     return cast(addr, POINTER(typ)).contents
 
+
 CHEW_FUNC = CFUNCTYPE(c_int,
                       POINTER(dtrace_probedata),
                       POINTER(c_void_p))
@@ -78,6 +79,7 @@ BUFFERED_FUNC = CFUNCTYPE(c_int,
 WALK_FUNC = CFUNCTYPE(c_int,
                       POINTER(dtrace_aggdata),
                       POINTER(c_void_p))
+
 
 class DTraceConsumer(object):
     '''
@@ -106,7 +108,10 @@ class DTraceConsumer(object):
         '''
         LIBRARY.dtrace_close(self.handle)
 
-    def run_script(self, script, runtime=1):
+    def run_script(self, script, runtime=1, chew_func=None,
+                                            chew_rec_func=None,
+                                            walk_func=None,
+                                            out_func=None):
         '''
         Run a DTrace script for a number of seconds defined by the runtime.
 
@@ -117,9 +122,29 @@ class DTraceConsumer(object):
         script -- The script to run.
         runtime -- The time the script should run in second (Default: 1s).
         '''
+        if chew_func is not None:
+            chew = CHEW_FUNC(chew_func)
+        else:
+            chew = CHEW_FUNC(simple_chew_func)
+
+        if chew_rec_func is not None:
+            chew_rec = CHEWREC_FUNC(chew_rec_func)
+        else:
+            chew_rec = CHEWREC_FUNC(simple_chewrec_func)
+
+        if walk_func is not None:
+            walk = WALK_FUNC(walk_func)
+        else:
+            walk = WALK_FUNC(simple_walk)
+
+        if out_func is not None:
+            buf_out = BUFFERED_FUNC(out_func)
+        else:
+            buf_out = BUFFERED_FUNC(simple_buffered_out_writer)
+
+
         # set simple output callbacks
-        buf_func = BUFFERED_FUNC(buffered_stdout_writer)
-        if LIBRARY.dtrace_handle_buffered(self.handle, buf_func, None) == -1:
+        if LIBRARY.dtrace_handle_buffered(self.handle, buf_out, None) == -1:
             raise Exception('Unable to set the stdout buffered writer.')
 
         # compile
@@ -137,8 +162,6 @@ class DTraceConsumer(object):
 
         # aggregate data for a few sec...
         i = 0
-        chew = CHEW_FUNC(chew_func)
-        chew_rec = CHEWREC_FUNC(chewrec_func)
         while i < runtime:
             LIBRARY.dtrace_sleep(self.handle)
             LIBRARY.dtrace_work(self.handle, None, chew, chew_rec, None)
@@ -149,8 +172,7 @@ class DTraceConsumer(object):
         LIBRARY.dtrace_stop(self.handle)
 
         # sorting instead of dtrace_aggregate_walk
-        walk_func = WALK_FUNC(walk)
-        if LIBRARY.dtrace_aggregate_walk_valsorted(self.handle, walk_func,
+        if LIBRARY.dtrace_aggregate_walk_valsorted(self.handle, walk,
                                                    None) != 0:
             raise Exception('Failed to walk the aggregate: ',
                             self._get_error_msg())
