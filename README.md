@@ -16,7 +16,7 @@ self written chew, chewrec, buffered out and walk functions. See the examples
 on how to do this - and see the simple implementations of those functions in
 the consumers module.
 
-Note that the aggregate walk functions are kinda of limited and in a hacked
-together state.
+Note that the aggregate walk functions are kind of limited in functionnailty 
+and in a hacked together state.
 
 (c) 2011 Thijs Metsch
