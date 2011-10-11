@@ -11,9 +11,12 @@ is very rare :-)
 The codes in the examples folder should give an overview of how to use Python
 as a DTrace consumer.
 
-Bot the DTraceConsumer and the DTraceConsumerThread can be initialized with
+Both the DTraceConsumer and the DTraceConsumerThread can be initialized with
 self written chew, chewrec, buffered out and walk functions. See the examples
 on how to do this - and see the simple implementations of those functions in
 the consumers module.
+
+Note that the aggregate walk functions are kinda of limited and in a hacked
+together state.
 
 (c) 2011 Thijs Metsch
