@@ -1,93 +1,84 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset='utf-8'><meta name="keywords" content="DTrace, Python, Python DTrace consumer, DTrace consumer, DTrace Python">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"></meta>
+    <meta name="keywords" content="DTrace, Python, Python DTrace consumer, DTrace consumer, DTrace Python" />
+    <title>
+      tmetsch/python-dtrace @ GitHub
+    </title>
+    <link rel='stylesheet' href='style.css' type="text/css" />
+    <script type="text/javascript">
+//<![CDATA[
 
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-6613507-14']);
+    _gaq.push(['_trackPageview']);
 
-  <title>tmetsch/python-dtrace @ GitHub</title>
-
-  <style type="text/css">
-    body {
-      margin-top: 1.0em;
-      background-color: #fff;
-      font-family: Helvetica, Arial, FreeSans, san-serif;
-      color: #000000;
-    }
-    #container {
-      margin: 0 auto;
-      width: 700px;
-    }
-    h1 { font-size: 3.8em; color: #26331a; margin-bottom: 3px; }
-    h1 .small { font-size: 0.4em; }
-    h1 a { text-decoration: none }
-    h2 { font-size: 1.5em; color: #26331a; }
-    h3 { text-align: center; color: #26331a; }
-    a { color: #26331a; }
-    .description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; font-style: italic;}
-    .download { float: right; }
-    pre { background: #000; color: #fff; padding: 15px;}
-    hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
-    .footer { text-align:center; padding-top:30px; font-style: italic; }
-  </style>
-  <script type="text/javascript">
-
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-6613507-14']);
-  _gaq.push(['_trackPageview']);
-
-  (function() {
+    (function() {
     var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
     ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  })();
+    })();
 
-</script>
-</head>
-
-<body>
-  <a href="http://github.com/tmetsch/python-dtrace"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
-
-  <div id="container">
-
-    <div class="download">
-      <a href="http://github.com/tmetsch/python-dtrace/zipball/master">
-        <img border="0" width="90" src="http://github.com/images/modules/download/zip.png"></a>
-      <a href="http://github.com/tmetsch/python-dtrace/tarball/master">
-        <img border="0" width="90" src="http://github.com/images/modules/download/tar.png"></a>
+    //]]>
+    </script>
+  </head>
+  <body>
+    <a href="http://github.com/tmetsch/python-dtrace"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
+    <div id="container">
+      <div class="download">
+        <a href="http://github.com/tmetsch/python-dtrace/zipball/master"><img border="0" width="90" src="http://github.com/images/modules/download/zip.png" alt="github" /></a> <a href="http://github.com/tmetsch/python-dtrace/tarball/master"><img border="0" width="90" src="http://github.com/images/modules/download/tar.png" alt="github"/></a>
+      </div>
+      <h1>
+        <a href="http://github.com/tmetsch/python-dtrace">python-dtrace</a>
+      </h1>
+      <div class="description">
+        A <a href="http://www.python.org">Python</a> <a href="http://www.dtrace.org">DTrace</a> consumer using libdtrace and ctypes - Now Python can be used as DTrace Provider and Consumer...
+      </div>
+      <h2>
+        Download
+      </h2>
+      <p>
+        You can download this project in either <a href="http://github.com/tmetsch/python-dtrace/zipball/master">zip</a> or <a href="http://github.com/tmetsch/python-dtrace/tarball/master">tar</a> formats.
+      </p>
+      <p>
+        You can also clone the project with <a href="http://git-scm.com">Git</a> by running:
+      </p>
+      <pre>
+$ git clone git://github.com/tmetsch/python-dtrace
+</pre>
+      <p>
+        The project is also hosted on <a href="http://pypi.python.org/pypi/python-dtrace">pypi</a> and can be installed using <a href="http://www.pip-installer.org/en/latest/index.html">pip</a> or <a href="http://pypi.python.org/pypi/setuptools">easy_install</a> 'python-dtrace'.
+      </p>
+      <h2>
+        Screenshots
+      </h2>
+      <p>
+        Several examples are demoed in little scripts in the <em>/examples</em> folder. But you can do way more with it: Click on the Screenshots to see larger views.
+      </p>
+      <div class="image">
+        <a href="python-dtrace-trace-flow.png"><img src="python-dtrace-trace-flow.png" alt="Screenshot 1" /></a>
+        <div class="caption">
+          Trace the flow of a program provided by a pid (The language the program is written in needs to have a DTrace provider - like Python). By double-clicking the entries the matching Source Code is shown.
+        </div>
+      </div>
+      <div class="image">
+        <a href="python-dtrace-syscalls.png"><img src="python-dtrace-syscalls.png" alt="Screenshot 2" /></a>
+        <div class="caption">
+          Life updated &amp; animated diagram written in Python with Tk. The size of the bubbles reflects the number of syscalls the process made. So the bubbles appear, grow and shrink while the system runs.
+        </div>
+      </div>
+      <div class="image">
+        <a href="python-dtrace-terminal.png"><img src="python-dtrace-terminal.png" alt="Screenshot 3" /></a>
+        <div class="caption">
+          Basic usage of the DTrace Python Consumer.
+        </div>
+      </div>
+      <div class="image">
+        <a href="python-dtrace-callgraph.png"><img src="python-dtrace-callgraph.png" alt="Screenshot 4" /></a>
+        <div class="caption">
+          Life updating call graph of a program which DTrace attached to using the <em>pid</em>. Again any (running) programm written in a language which has a DTrace provider can be traced - and therefore callgraphs created.
+        </div>
+      </div>
     </div>
-
-    <h1><a href="http://github.com/tmetsch/python-dtrace">python-dtrace</a>
-      <span class="small">by <a href="http://github.com/tmetsch">tmetsch</a></span></h1>
-
-    <div class="description">
-      A <a href="http://www.python.org">Python</a> <a href="http://www.dtrace.org">DTrace</a> consumer using libdtrace and ctypes - Now Python can be used as DTrace Provider and Consumer...
-    </div>
-
-    <h2>Examples</h2>    
-    There are some examples available in the examples directory. The following screenshot shows a Python Tkinter GUI which shows the current (life updated) number of syscalls per execname. The bigger the circle, the more syscalls where made. The circles resize based on the number of syscalls they made. Over time this gives a nice animation which demos the capabilities of Python as a DTrace consumer.
-    <center>
-        <img src="screenshot.png" alt="screenshot" style="margin: 1em;"></img>
-    </center>
-    <h2>Download</h2>
-    <p>
-      You can download this project in either
-      <a href="http://github.com/tmetsch/python-dtrace/zipball/master">zip</a> or
-      <a href="http://github.com/tmetsch/python-dtrace/tarball/master">tar</a> formats.
-    </p>
-    <p>You can also clone the project with <a href="http://git-scm.com">Git</a>
-      by running:
-      <pre>$ git clone git://github.com/tmetsch/python-dtrace</pre>
-    </p>
-    <p>
-    The project is also hosted on <a href="http://pypi.python.org/pypi/python-dtrace">pypi</a> and can be installed using <a href="http://www.pip-installer.org/en/latest/index.html">pip</a> or <a href="http://pypi.python.org/pypi/setuptools">easy_install</a> 'python-dtrace'.
-    </p>
-
-    <div class="footer">
-      get the source code on GitHub : <a href="http://github.com/tmetsch/python-dtrace">tmetsch/python-dtrace</a>
-    </div>
-
-  </div>
-
-  
-</body>
+  </body>
 </html>
