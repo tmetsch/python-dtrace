@@ -19,4 +19,8 @@ the consumers module.
 Note that the aggregate walk functions are kind of limited in functionnailty 
 and in a hacked together state.
 
+Also note that I am looking into switching to cython to see if the callback
+functions can be handled in a nicer way. Please see the cython-approach
+branch.
+ 
 (c) 2011 Thijs Metsch
