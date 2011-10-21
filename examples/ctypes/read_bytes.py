@@ -8,7 +8,7 @@ Created on Oct 10, 2011
 @author: tmetsch
 '''
 
-from dtrace.consumer import DTraceConsumer
+from dtrace_ctypes.consumer import DTraceConsumer
 
 SCRIPT = 'sysinfo:::readch { @bytes[execname] = sum(arg0); }'
 
