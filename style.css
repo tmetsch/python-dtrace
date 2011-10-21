@@ -1,0 +1,56 @@
+body {
+  margin-top: 1.0em;
+  background-color: #fff;
+  font-family: Helvetica, Arial, FreeSans, san-serif;
+  color: #000000;
+  }
+#container {
+  margin: 0 auto;
+  width: 600px;
+  }
+h1 { 
+  font-size: 3.8em; 
+  color: #26331a; 
+  margin-bottom: 3px; 
+  }
+h1 a { 
+  text-decoration: none 
+}
+h2 { 
+  font-size: 1.5em; 
+  color: #26331a; 
+  }  
+a { 
+  color: #26331a; 
+  }
+.description { 
+  font-size: 1.2em; 
+  margin-bottom: 30px; 
+  margin-top: 30px; 
+  font-style: italic;
+  }
+.download { 
+  float: right; 
+  }
+  
+pre { 
+  background: #000; 
+  color: #fff; 
+  padding: 15px;
+  }
+
+.image {
+  width: 280px;
+  float: left;
+  margin: 10px;
+  }
+.image .caption { 
+  font-size: 80%;
+  font-family: Verdana, Arial, sans-serif;
+  text-align: center; 
+  }
+
+.image img {
+  width: 280px; 
+  border: 0px;
+  }
