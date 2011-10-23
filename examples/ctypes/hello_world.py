@@ -8,7 +8,7 @@ Created on Oct 10, 2011
 @author: tmetsch
 '''
 
-from dtrace_ctypes.consumer import DTraceConsumer
+from dtrace.ctypes.consumer import DTraceConsumer
 
 SCRIPT = 'dtrace:::BEGIN {trace("Hello World");}'
 

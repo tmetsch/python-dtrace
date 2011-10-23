@@ -10,7 +10,7 @@ Created on Oct 10, 2011
 '''
 
 import time
-from dtrace_ctypes.consumer import DTraceConsumerThread
+from dtrace.ctypes.consumer import DTraceConsumerThread
 
 SCRIPT = 'syscall:::entry { @num[execname] = count(); }'
 

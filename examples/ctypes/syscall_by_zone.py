@@ -10,7 +10,7 @@ Created on Oct 10, 2011
 
 
 from ctypes import cast, c_char_p, c_int
-from dtrace_ctypes.consumer import DTraceConsumerThread, deref
+from dtrace.ctypes.consumer import DTraceConsumerThread, deref
 import time
 
 SCRIPT = 'syscall:::entry { @num[zonename] = count(); }'

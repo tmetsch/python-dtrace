@@ -10,7 +10,7 @@ Created on Oct 10, 2011
 '''
 
 from ctypes import cast, c_char_p, c_int
-from dtrace_ctypes.consumer import DTraceConsumer, deref
+from dtrace.ctypes.consumer import DTraceConsumer, deref
 
 SCRIPT = 'syscall:::entry { @num[execname] = count(); }'
 
