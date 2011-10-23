@@ -5,12 +5,19 @@ cdef extern from "libelf_workaround.h":
 
 cdef extern from "dtrace.h":
     # taken from /usr/include/dtrace.h
+
+    ctypedef enum agg_types:
+        DTRACEACT_AGGREGATION = 0x0700
+        DTRACEAGG_COUNT = (DTRACEACT_AGGREGATION + 1)
+        DTRACEAGG_MIN = (DTRACEACT_AGGREGATION + 2)
+        DTRACEAGG_MAX = (DTRACEACT_AGGREGATION + 3)
+        DTRACEAGG_SUM = (DTRACEACT_AGGREGATION + 5)
+
     ctypedef struct dtrace_hdl_t:
         pass
 
     ctypedef struct dtrace_bufdata_t:
         char * dtbda_buffered
-        pass
 
     ctypedef struct dtrace_prog_t:
         pass
@@ -23,8 +30,18 @@ cdef extern from "dtrace.h":
         DTRACE_WORKSTATUS_OKAY,
         DTRACE_WORKSTATUS_DONE
 
+    ctypedef struct dtrace_recdesc_t:
+        int dtrd_action
+        int dtrd_offset
+
+    ctypedef struct dtrace_aggdesc_t:
+        int dtagd_nrecs
+        int dtagd_varid
+        dtrace_recdesc_t dtagd_rec[1]
+
     ctypedef struct dtrace_aggdata_t:
-        pass
+        dtrace_aggdesc_t * dtada_desc
+        char * dtada_data
 
     ctypedef struct dtrace_probedata_t:
         pass
@@ -74,3 +91,6 @@ cdef extern from "dtrace.h":
     # error handling...
     int dtrace_errno(dtrace_hdl_t * handle)
     char * dtrace_errmsg(dtrace_hdl_t * handle, int error)
+
+    # python callbacks...
+    void out_callback(char * val)

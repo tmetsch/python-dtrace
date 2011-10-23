@@ -2,26 +2,68 @@
 import time
 from dtrace.dtrace_h cimport *
 
-cdef int chew(dtrace_probedata_t * data, void * arg):
+cdef int chew(dtrace_probedata_t * data, void * arg) with gil:
     return 0
 
-cdef int chewrec(dtrace_probedata_t * data, dtrace_recdesc_t * rec, void * arg):
+cdef int chewrec(dtrace_probedata_t * data, dtrace_recdesc_t * rec, void * arg) with gil:
     return 0
 
-cdef int buf_out(dtrace_bufdata_t * buf_data, void * arg):
-    print(buf_data.dtbda_buffered.strip())
+cdef int buf_out(dtrace_bufdata_t * buf_data, void * arg) with gil:
+
+    value = buf_data.dtbda_buffered.strip()
+
+    function = <object>arg
+    function(value)
+
     return 0
 
-cdef int walk(dtrace_aggdata_t * data, void * arg):
+cdef int walk(dtrace_aggdata_t * data, void * arg) with gil:
+
+    key = []
+    value = None
+
+    desc = data.dtada_desc
+    id = desc.dtagd_varid
+    cdef dtrace_recdesc_t *rec
+
+    aggrec = &desc.dtagd_rec[desc.dtagd_nrecs - 1]
+    action = aggrec.dtrd_action
+
+    for i in range(1, desc.dtagd_nrecs - 1):
+            rec = &desc.dtagd_rec[i]
+            address = data.dtada_data + rec.dtrd_offset
+            key.append(<char *>address)
+
+    if aggrec.dtrd_action in [DTRACEAGG_SUM,DTRACEAGG_MAX,DTRACEAGG_MIN,DTRACEAGG_COUNT]:
+        value = (<int *>(data.dtada_data + aggrec.dtrd_offset))[0]
+    else:
+        print 'unsupported aggregating action!'
+
+    function = <object>arg
+    function(id, key, value)
+
     return 0
 
 cdef class DTraceConsumer:
-    cdef dtrace_hdl_t * handle
 
-    def __init__(self):
+    cdef dtrace_hdl_t * handle
+    cdef object out_func
+    cdef object walk_func
+
+    def __init__(self, out_func=None, walk_func=None):
         '''
         Get a DTrace handle.
         '''
+        if out_func == None:
+            self.out_func = self.simple_out
+        else:
+            self.out_func = out_func
+
+        if walk_func == None:
+            self.walk_func = self.simple_walk
+        else:
+            self.walk_func = walk_func
+
         self.handle = dtrace_open(3, 0, NULL)
         if self.handle == NULL:
             raise Exception(dtrace_errmsg(NULL, dtrace_errno(self.handle)))
@@ -39,6 +81,12 @@ cdef class DTraceConsumer:
         '''
         dtrace_close(self.handle)
 
+    cpdef simple_out(self, value):
+        print value
+
+    cpdef simple_walk(self, id, key, value):
+        print id, key, value
+
     cpdef run_script(self, char * script, runtime=1):
         '''
         Run a DTrace script for a number of seconds defined by the runtime.
@@ -51,7 +99,7 @@ cdef class DTraceConsumer:
         runtime -- The time the script should run in second (Default: 1s).
         '''
         # set simple output callbacks
-        if dtrace_handle_buffered(self.handle, & buf_out, NULL) == -1:
+        if dtrace_handle_buffered(self.handle, & buf_out, <void *>self.out_func) == -1:
             raise Exception('Unable to set the stdout buffered writer.')
 
         # compile
@@ -81,10 +129,8 @@ cdef class DTraceConsumer:
         dtrace_stop(self.handle)
 
         # sorting instead of dtrace_aggregate_walk
-        if dtrace_aggregate_walk_valsorted(self.handle, & walk, NULL) != 0:
+        if dtrace_aggregate_walk_valsorted(self.handle, & walk, <void *>self.walk_func) != 0:
             raise Exception('Failed to walk the aggregate: ',
                             dtrace_errmsg(NULL, dtrace_errno(self.handle)))
-
-        print 'here I am...'
 
 

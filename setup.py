@@ -14,8 +14,8 @@ try:
     from Cython.Distutils import build_ext
 
     BUILD_EXTENSION = {'build_ext': build_ext}
-    EXT_MODULES = [Extension("dtrace", ["dtrace/dtrace.pyx",
-                                        "dtrace/dtrace_h.pxd"],
+    EXT_MODULES = [Extension("dtrace", ["dtrace/dtrace_h.pxd",
+                                        "dtrace/dtrace.pyx"],
                              libraries=["dtrace"])]
 
 except ImportError:
@@ -33,7 +33,7 @@ setup(name='python-dtrace',
       license='TBD',
       keywords='DTrace',
       url='http://tmetsch.github.com/python-dtrace/',
-      packages=['dtrace', 'dtrace_ctypes'],
+      packages=['dtrace_ctypes'],
       cmdclass=BUILD_EXTENSION,
       ext_modules=EXT_MODULES,
       classifiers=["Development Status :: 2 - Pre-Alpha",
