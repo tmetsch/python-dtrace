@@ -8,7 +8,7 @@ Created on Oct 10, 2011
 
 from ctypes import cdll, CDLL, byref, c_int, c_char_p, CFUNCTYPE, c_void_p, \
     POINTER, cast, c_uint
-from dtrace.ctypes.dtrace_structs import dtrace_bufdata, dtrace_probedata, \
+from dtrace_ctypes.dtrace_structs import dtrace_bufdata, dtrace_probedata, \
     dtrace_aggdata, dtrace_recdesc
 from threading import Thread
 import threading
