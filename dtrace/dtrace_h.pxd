@@ -3,60 +3,72 @@ cdef extern from "libelf_workaround.h":
     # lib elf workaround :-/
     pass
 
-cdef extern from "dtrace.h":
-    # taken from /usr/include/dtrace.h
+
+cdef extern from "sys/dtrace.h":
 
     ctypedef enum agg_types:
+        # Taken from sys/dtrace.h:454
+        # Needs to be in enum because ctypes wants it that way :-/
         DTRACEACT_AGGREGATION = 0x0700
         DTRACEAGG_COUNT = (DTRACEACT_AGGREGATION + 1)
         DTRACEAGG_MIN = (DTRACEACT_AGGREGATION + 2)
         DTRACEAGG_MAX = (DTRACEACT_AGGREGATION + 3)
         DTRACEAGG_SUM = (DTRACEACT_AGGREGATION + 5)
 
-    ctypedef struct dtrace_hdl_t:
-        pass
-
-    ctypedef struct dtrace_bufdata_t:
-        char * dtbda_buffered
-
-    ctypedef struct dtrace_prog_t:
-        pass
-
-    ctypedef struct dtrace_proginfo_t:
-        pass
-
-    ctypedef enum dtrace_workstatus_t:
-        DTRACE_WORKSTATUS_ERROR = -1,
-        DTRACE_WORKSTATUS_OKAY,
-        DTRACE_WORKSTATUS_DONE
-
     ctypedef struct dtrace_recdesc_t:
+        # Taken from sys/dtrace.h:931
         int dtrd_action
         int dtrd_offset
 
     ctypedef struct dtrace_aggdesc_t:
+        # Taken from sys/dtrace.h:950
         int dtagd_nrecs
         int dtagd_varid
         dtrace_recdesc_t dtagd_rec[1]
 
-    ctypedef struct dtrace_aggdata_t:
-        dtrace_aggdesc_t * dtada_desc
-        char * dtada_data
 
-    ctypedef struct dtrace_probedata_t:
-        pass
+cdef extern from "dtrace.h":
 
-    # taken from /usr/include/sys/dtrace.h
     ctypedef enum dtrace_probespec_t:
+        # Taken from dtrace.h:186
         DTRACE_PROBESPEC_NONE = -1
         DTRACE_PROBESPEC_PROVIDER = 0
         DTRACE_PROBESPEC_MOD
         DTRACE_PROBESPEC_FUNC
         DTRACE_PROBESPEC_NAME
 
-    ctypedef struct dtrace_recdesc_t:
+    ctypedef enum dtrace_workstatus_t:
+        # Taken from dtrace.h:247
+        DTRACE_WORKSTATUS_ERROR = -1,
+        DTRACE_WORKSTATUS_OKAY,
+        DTRACE_WORKSTATUS_DONE
+
+    ctypedef struct dtrace_hdl_t:
+        # Taken from dtrace.h:54
         pass
 
+    ctypedef struct dtrace_prog_t:
+        # Taken from dtrace.h:58
+        pass
+
+    ctypedef struct dtrace_proginfo_t:
+        # Taken from dtrace.h:97
+        pass
+
+    ctypedef struct dtrace_probedata_t:
+        # Taken from dtrace.h:186
+        int dtpda_cpu
+
+    ctypedef struct dtrace_bufdata_t:
+        # Taken from dtrace.h:310
+        char * dtbda_buffered
+
+    ctypedef struct dtrace_aggdata_t:
+        # Taken from dtrace.h:351
+        dtrace_aggdesc_t * dtada_desc
+        char * dtada_data
+
+    # from dtrace.h
     ctypedef int dtrace_handle_buffered_f(dtrace_bufdata_t * buf_data, void * arg)
     ctypedef int dtrace_consume_probe_f(dtrace_probedata_t * , void *)
     ctypedef int dtrace_consume_rec_f(dtrace_probedata_t * , dtrace_recdesc_t * , void *)
@@ -91,6 +103,3 @@ cdef extern from "dtrace.h":
     # error handling...
     int dtrace_errno(dtrace_hdl_t * handle)
     char * dtrace_errmsg(dtrace_hdl_t * handle, int error)
-
-    # python callbacks...
-    void out_callback(char * val)
