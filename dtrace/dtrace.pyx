@@ -67,9 +67,15 @@ cdef int walk(dtrace_aggdata_t * data, void * arg) with gil:
     action = aggrec.dtrd_action
 
     for i in range(1, desc.dtagd_nrecs - 1):
-            rec = &desc.dtagd_rec[i]
-            address = data.dtada_data + rec.dtrd_offset
+        rec = &desc.dtagd_rec[i]
+        address = data.dtada_data + rec.dtrd_offset
+
+        # TODO: need to extend this.
+        if rec.dtrd_size == sizeof(uint32_t):
+            key.append((<int32_t *>address)[0])
+        else:
             key.append(<char *>address)
+
 
     if aggrec.dtrd_action in [DTRACEAGG_SUM, DTRACEAGG_MAX, DTRACEAGG_MIN,
                               DTRACEAGG_COUNT]:
@@ -310,24 +316,6 @@ cdef class DTraceContinuousConsumer:
         action -- id of the action which was called.
         '''
         print 'Called action was:', action
-
-    cpdef simple_out(self, value):
-        '''
-        A buffered output handler for all those prints.
-
-        value -- Line by line string of the DTrace output.
-        '''
-        print 'Value is:', value
-
-    cpdef simple_walk(self, id, key, value):
-        '''
-        Simple aggregation walker.
-
-        id -- the id.
-        key -- list of keys.
-        value -- the value.
-        '''
-        print id, key, value
 
     cpdef simple_out(self, value):
         '''

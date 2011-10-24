@@ -1,8 +1,9 @@
 
+from libc.stdint cimport int32_t, uint32_t
+
 cdef extern from "libelf_workaround.h":
     # lib elf workaround :-/
     pass
-
 
 cdef extern from "sys/dtrace.h":
 
@@ -19,6 +20,7 @@ cdef extern from "sys/dtrace.h":
         # Taken from sys/dtrace.h:931
         int dtrd_action
         int dtrd_offset
+        int dtrd_size
 
     ctypedef struct dtrace_aggdesc_t:
         # Taken from sys/dtrace.h:950
