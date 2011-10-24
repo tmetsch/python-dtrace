@@ -65,34 +65,34 @@ as the snapshot function is called. In the while loop you can either wait for
 new DTrace data to appear using *sleep* or just wait for some time. The
 signatures for the callbacks are the same as for the DTraceConsumer:
 
-class MyThread(Thread):
+    class MyThread(Thread):
 
-    def __init__(self, script):
-        Thread.__init__(self)
-        self._stop = threading.Event()
-        self.consumer = DTraceContinuousConsumer(script)
+        def __init__(self, script):
+            Thread.__init__(self)
+            self._stop = threading.Event()
+            self.consumer = DTraceContinuousConsumer(script)
 
-    def __del__(self):
-        del(self.consumer)
+        def __del__(self):
+            del(self.consumer)
 
-    def run(self):
-        Thread.run(self)
+        def run(self):
+            Thread.run(self)
 
-        while not self.stopped():
-            time.sleep(1) # self.consumer.sleep()
-            self.consumer.snapshot()
+            while not self.stopped():
+                time.sleep(1) # self.consumer.sleep()
+                self.consumer.snapshot()
 
-    def stop(self):
-        '''
-        Stop DTrace.
-        '''
-        self._stop.set()
+        def stop(self):
+            '''
+            Stop DTrace.
+            '''
+            self._stop.set()
 
-    def stopped(self):
-        '''
-        Used to check the status.
-        '''
-        return self._stop.isSet()
+        def stopped(self):
+            '''
+            Used to check the status.
+            '''
+            return self._stop.isSet()
 
 Note that when using the *sleep* function the GIL from Python is acquired and
 all your other code will not continue to run. Still it depends on what your
