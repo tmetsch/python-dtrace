@@ -207,10 +207,9 @@ cdef class DTraceConsumer:
                             dtrace_errmsg(NULL, dtrace_errno(self.handle)))
 
 
-cdef class DTraceConsumerThread:
+cdef class DTraceContinuousConsumer:
     """
-    Thread class with a stop() method. The thread itself has to check
-    regularly for the stopped() condition.
+    Continuously consuming DTrace consumer
     """
 
     cdef dtrace_hdl_t * handle
@@ -218,18 +217,12 @@ cdef class DTraceConsumerThread:
     cdef object walk_func
     cdef object chew_func
     cdef object chewrec_func
-    cdef object script
-    cdef object _stop
 
     def __init__(self, script, chew_func=None, chewrec_func=None,
                  out_func=None, walk_func=None):
         '''
         Constructor. will get the DTrace handle
         '''
-        super(DTraceConsumerThread, self).__init__()
-        self._stop = threading.Event()
-        self.script = script
-
         if chew_func == None:
             self.chew_func = self.simple_chew
         else:
@@ -261,10 +254,32 @@ cdef class DTraceConsumerThread:
         if dtrace_setopt(self.handle, 'aggsize', '4m') != 0:
             raise Exception(dtrace_errmsg(NULL, dtrace_errno(self.handle)))
 
+        # set simple output callbacks
+        if dtrace_handle_buffered(self.handle, & buf_out,
+                                  <void *>self.out_func) == -1:
+            raise Exception('Unable to set the stdout buffered writer.')
+
+        # compile
+        cdef dtrace_prog_t * prg
+        prg = dtrace_program_strcompile(self.handle, script,
+                                        DTRACE_PROBESPEC_NAME, 0, 0, NULL)
+        if prg == NULL:
+            raise Exception('Unable to compile the script: ',
+                            dtrace_errmsg(NULL, dtrace_errno(self.handle)))
+
+        # run
+        if dtrace_program_exec(self.handle, prg, NULL) == -1:
+            raise Exception('Failed to execute: ',
+                            dtrace_errmsg(NULL, dtrace_errno(self.handle)))
+        if dtrace_go(self.handle) != 0:
+            raise Exception('Failed to run_script: ',
+                            dtrace_errmsg(NULL, dtrace_errno(self.handle)))
+
     def __del__(self):
         '''
         Release DTrace handle.
         '''
+        dtrace_stop(self.handle)
         dtrace_close(self.handle)
 
     cpdef simple_chew(self, cpu):
@@ -291,54 +306,18 @@ cdef class DTraceConsumerThread:
         '''
         print id, key, value
 
-    def run(self):
-        #threading.Thread.run(self)
-        # set simple output callbacks
-        if dtrace_handle_buffered(self.handle, & buf_out,
-                                  <void *>self.out_func) == -1:
-            raise Exception('Unable to set the stdout buffered writer.')
+    def sleep(self):
+        dtrace_sleep(self.handle)
 
-        # compile
-        cdef dtrace_prog_t * prg
-        prg = dtrace_program_strcompile(self.handle, self.script,
-                                        DTRACE_PROBESPEC_NAME, 0, 0, NULL)
-        if prg == NULL:
-            raise Exception('Unable to compile the script: ',
-                            dtrace_errmsg(NULL, dtrace_errno(self.handle)))
-
-        # run
-        if dtrace_program_exec(self.handle, prg, NULL) == -1:
-            raise Exception('Failed to execute: ',
-                            dtrace_errmsg(NULL, dtrace_errno(self.handle)))
-        if dtrace_go(self.handle) != 0:
-            raise Exception('Failed to run_script: ',
-                            dtrace_errmsg(NULL, dtrace_errno(self.handle)))
-
-        # aggregate data for a few sec...
+    def snapshot(self):
         args = (self.chew_func, self.chewrec_func)
+        dtrace_work(self.handle, NULL, & chew, & chewrec, <void *>args)
 
-        while not self.stopped():
-            dtrace_sleep(self.handle)
-            dtrace_work(self.handle, NULL, & chew, & chewrec, <void *>args)
+        if dtrace_aggregate_snap(self.handle) != 0:
+            raise Exception('Failed to get the aggregate: ',
+                            dtrace_errmsg(NULL, dtrace_errno(self.handle)))
+        if dtrace_aggregate_walk(self.handle, & walk,
+                                       <void *>self.walk_func) != 0:
+            raise Exception('Failed to walk aggregate: ',
+                            dtrace_errmsg(NULL, dtrace_errno(self.handle)))
 
-            if dtrace_aggregate_snap(self.handle) != 0:
-                raise Exception('Failed to get the aggregate: ',
-                                dtrace_errmsg(NULL, dtrace_errno(self.handle)))
-            if dtrace_aggregate_walk(self.handle, & walk,
-                                           <void *>self.walk_func) != 0:
-                raise Exception('Failed to walk aggregate: ',
-                                dtrace_errmsg(NULL, dtrace_errno(self.handle)))
-
-        dtrace_stop(self.handle)
-
-    def stop(self):
-        '''
-        Stop DTrace.
-        '''
-        self._stop.set()
-
-    def stopped(self):
-        '''
-        Used to check the status.
-        '''
-        return self._stop.isSet()

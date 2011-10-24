@@ -9,27 +9,57 @@ Created on Oct 10, 2011
 @author: tmetsch
 '''
 
-import time
+from dtrace import DTraceContinuousConsumer
 from threading import Thread
-from dtrace import DTraceConsumerThread
+import threading
+import time
 
 SCRIPT = 'syscall:::entry { @num[execname] = count(); }'
+
+
+class MyThread(Thread):
+
+    def __init__(self, script):
+        Thread.__init__(self)
+        self._stop = threading.Event()
+        self.consumer = DTraceContinuousConsumer(script)
+
+    def __del__(self):
+        del(self.consumer)
+
+    def run(self):
+        Thread.run(self)
+
+        while not self.stopped():
+            self.consumer.sleep()
+            self.consumer.snapshot()
+
+    def stop(self):
+        '''
+        Stop DTrace.
+        '''
+        self._stop.set()
+
+    def stopped(self):
+        '''
+        Used to check the status.
+        '''
+        return self._stop.isSet()
 
 
 def main():
     '''
     Run DTrace...
     '''
-    consumer = DTraceConsumerThread(SCRIPT)
-    dtrace = Thread(target=consumer.run)
-    dtrace.start()
+    thr = MyThread(SCRIPT)
+    thr.start()
 
     # we will stop the thread after some time...
-    time.sleep(2)
+    time.sleep(5)
 
     # stop and wait for join...
-    consumer.stop()
-    dtrace.join()
+    thr.stop()
+    thr.join()
 
 if __name__ == '__main__':
     main()
