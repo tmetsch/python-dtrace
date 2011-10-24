@@ -28,6 +28,9 @@ cdef int chewrec(dtrace_probedata_t * data, dtrace_recdesc_t * rec,
     Called once per action.
     '''
 
+    if rec == NULL:
+        return 0
+
     tmp = <set>arg
     function = <object>tmp[1]
 
@@ -133,9 +136,19 @@ cdef class DTraceConsumer:
         dtrace_close(self.handle)
 
     cpdef simple_chew(self, cpu):
+        '''
+        Simple chew function.
+
+        cpu -- CPU id.
+        '''
         print 'Running on CPU:', cpu
 
     cpdef simple_chewrec(self, action):
+        '''
+        Simple chewrec callback.
+
+        action -- id of the action which was called.
+        '''
         print 'Called action was:', action
 
     cpdef simple_out(self, value):
@@ -283,10 +296,38 @@ cdef class DTraceContinuousConsumer:
         dtrace_close(self.handle)
 
     cpdef simple_chew(self, cpu):
+        '''
+        Simple chew function.
+
+        cpu -- CPU id.
+        '''
         print 'Running on CPU:', cpu
 
     cpdef simple_chewrec(self, action):
+        '''
+        Simple chewrec callback.
+
+        action -- id of the action which was called.
+        '''
         print 'Called action was:', action
+
+    cpdef simple_out(self, value):
+        '''
+        A buffered output handler for all those prints.
+
+        value -- Line by line string of the DTrace output.
+        '''
+        print 'Value is:', value
+
+    cpdef simple_walk(self, id, key, value):
+        '''
+        Simple aggregation walker.
+
+        id -- the id.
+        key -- list of keys.
+        value -- the value.
+        '''
+        print id, key, value
 
     cpdef simple_out(self, value):
         '''
@@ -320,4 +361,3 @@ cdef class DTraceContinuousConsumer:
                                        <void *>self.walk_func) != 0:
             raise Exception('Failed to walk aggregate: ',
                             dtrace_errmsg(NULL, dtrace_errno(self.handle)))
-
