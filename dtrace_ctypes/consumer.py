@@ -7,8 +7,8 @@ Created on Oct 10, 2011
 '''
 
 from ctypes import cdll, CDLL, byref, c_int, c_char_p, CFUNCTYPE, c_void_p, \
-    POINTER, cast, c_uint
-from dtrace.dtrace_structs import dtrace_bufdata, dtrace_probedata, \
+    POINTER, cast
+from dtrace_ctypes.dtrace_structs import dtrace_bufdata, dtrace_probedata, \
     dtrace_aggdata, dtrace_recdesc
 from threading import Thread
 import threading
@@ -204,8 +204,10 @@ class DTraceConsumer(object):
 
 
 class DTraceConsumerThread(Thread):
-    """Thread class with a stop() method. The thread itself has to check
-    regularly for the stopped() condition."""
+    """
+    Thread class with a stop() method. The thread itself has to check
+    regularly for the stopped() condition.
+    """
 
     def __init__(self, script,
                        chew_func=None,

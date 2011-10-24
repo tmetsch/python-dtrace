@@ -1,7 +1,7 @@
 '''
-Package containing the DTrace consumer.
+Package containing the DTrace consumer based on cython.
 
-Created on Oct 10, 2011
+Created on Oct 23, 2011
 
 @author: tmetsch
 '''

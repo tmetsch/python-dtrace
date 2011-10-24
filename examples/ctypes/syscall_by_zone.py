@@ -8,19 +8,26 @@ Created on Oct 10, 2011
 @author: tmetsch
 '''
 
-from dtrace import DTraceConsumerThread
-from threading import Thread
+
+from ctypes import cast, c_char_p, c_int
+from dtrace_ctypes.consumer import DTraceConsumerThread, deref
 import time
 
 SCRIPT = 'syscall:::entry { @num[zonename] = count(); }'
 
 
-def walk(id, key, value):
+def walk(data, arg):
     '''
     Nice formatted aggregate walker.
     '''
+    tmp = data.contents.dtada_data
 
-    print 'Zone "{0:s}" made {1:d} syscalls.'.format(key[0], value)
+    name = cast(tmp + 16, c_char_p).value
+    count = deref(tmp + 272, c_int).value
+
+    print 'Zone "{0:s}" made {1:d} syscalls.'.format(name, count)
+
+    return 0
 
 
 def main():
@@ -29,15 +36,14 @@ def main():
     '''
     print 'Hint: if you don\'t get any output try running it with pfexec...'
 
-    consumer = DTraceConsumerThread(SCRIPT, walk_func=walk)
-    dtrace = Thread(target=consumer.run)
+    dtrace = DTraceConsumerThread(SCRIPT, walk_func=walk)
     dtrace.start()
 
     # we will stop the thread after some time...
     time.sleep(5)
 
     # stop and wait for join...
-    consumer.stop()
+    dtrace.stop()
     dtrace.join()
 
 if __name__ == '__main__':

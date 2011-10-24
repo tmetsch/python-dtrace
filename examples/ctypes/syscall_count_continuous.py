@@ -10,8 +10,7 @@ Created on Oct 10, 2011
 '''
 
 import time
-from threading import Thread
-from dtrace import DTraceConsumerThread
+from dtrace_ctypes.consumer import DTraceConsumerThread
 
 SCRIPT = 'syscall:::entry { @num[execname] = count(); }'
 
@@ -20,15 +19,14 @@ def main():
     '''
     Run DTrace...
     '''
-    consumer = DTraceConsumerThread(SCRIPT)
-    dtrace = Thread(target=consumer.run)
+    dtrace = DTraceConsumerThread(SCRIPT)
     dtrace.start()
 
     # we will stop the thread after some time...
     time.sleep(2)
 
     # stop and wait for join...
-    consumer.stop()
+    dtrace.stop()
     dtrace.join()
 
 if __name__ == '__main__':
