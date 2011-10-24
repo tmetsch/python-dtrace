@@ -28,8 +28,9 @@ except ImportError:
 
 setup(name='python-dtrace',
       version='0.0.2',
-      description='DTrace consumer for Python based on libdtrace. Use Python \
-                   now as DTrace Consumer and Provider!',
+      description='DTrace consumer for Python based on libdtrace. Use Python'
+                  + ' as DTrace Consumer and Provider! See the homepage for more'
+                  + ' information.',
       license='TBD',
       keywords='DTrace',
       url='http://tmetsch.github.com/python-dtrace/',
