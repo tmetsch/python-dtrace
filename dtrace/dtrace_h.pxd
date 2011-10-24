@@ -99,6 +99,8 @@ cdef extern from "dtrace.h":
 
     # walking aggregate
     int dtrace_aggregate_walk_valsorted(dtrace_hdl_t * , dtrace_aggregate_f * , void *)
+    int dtrace_aggregate_snap(dtrace_hdl_t *)
+    int dtrace_aggregate_walk(dtrace_hdl_t *, dtrace_aggregate_f *, void *)
 
     # error handling...
     int dtrace_errno(dtrace_hdl_t * handle)
