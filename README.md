@@ -57,47 +57,30 @@ be provided as parameter just like the script. During the DTrace chew, chewrec
 and the out callbacks are called. When the run is finished the aggregation will
 be walked.
 
-There also exists and DTraceContinuousConsumer which can be used to
-continuously run DTrace in the background. It can be embedded in a Thread as
-showed below. This might come in handy when you want to continuously aggregate
-data for e.g. an GUI. The chew, chewrec, out and walk callbacks are now called
-as the snapshot function is called. In the while loop you can either wait for
-new DTrace data to appear using *sleep* or just wait for some time. The
-signatures for the callbacks are the same as for the DTraceConsumer:
+There also exists and DTraceConsumerThread which can be used to continuously
+run DTrace in the background. This might come in handy when you want to
+continuously aggregate data for e.g. an GUI. The chew, chewrec, out and walk
+callbacks are now called as the snapshot function of DTrace is called.
 
-    class MyThread(Thread):
+The DTraceConsumerThread has an parameter sleep which defaults to 0. This means
+that the Thread will wait for DTrace for new aggregation data to arrive. This
+has a major drawback since during the wait the wait the Python GIL is acquired
+and your program will stop if it needs to wait for DTrace to get new data.
+Setting the parameter to 1 (or higher) will let the Thread snapshot the DTrace
+aggregate every second instead of waiting for new data. Both usages might make
+sense - Set the sleep parameter if you know data will arrive sporadically or
+simple let it default to 0 if you know data comes in all the time - so nothing
+will be blocked.
 
-        def __init__(self, script):
-            Thread.__init__(self)
-            self._stop = threading.Event()
-            self.consumer = DTraceContinuousConsumer(script)
+    thr = DTraceConsumerThread(SCRIPT)
+    thr.start()
 
-        def __del__(self):
-            del(self.consumer)
+    # we will stop the thread after 5 sec...
+    time.sleep(5)
 
-        def run(self):
-            Thread.run(self)
-
-            while not self.stopped():
-                time.sleep(1) # self.consumer.sleep()
-                self.consumer.snapshot()
-
-        def stop(self):
-            '''
-            Stop DTrace.
-            '''
-            self._stop.set()
-
-        def stopped(self):
-            '''
-            Used to check the status.
-            '''
-            return self._stop.isSet()
-
-Note that when using the *sleep* function the GIL from Python is acquired and
-all your other code will not continue to run. Still it depends on what your
-DTrace script does and how frequent you set it to fire the probes. Sometimes
-the sleep does make sense. See the examples folder for more details.
+    # stop and wait for join...
+    thr.stop()
+    thr.join()
 
 Examples for both ways of handling the Python DTrace consumer can be found in
 the *examples* folder.

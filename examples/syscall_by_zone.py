@@ -8,42 +8,10 @@ Created on Oct 10, 2011
 @author: tmetsch
 '''
 
-from dtrace import DTraceContinuousConsumer
-from threading import Thread
-import threading
+from dtrace import DTraceConsumerThread
 import time
 
 SCRIPT = 'syscall:::entry { @num[zonename] = count(); }'
-
-
-class MyThread(Thread):
-
-    def __init__(self, script):
-        Thread.__init__(self)
-        self._stop = threading.Event()
-        self.consumer = DTraceContinuousConsumer(script, walk_func=my_walk)
-
-    def __del__(self):
-        del(self.consumer)
-
-    def run(self):
-        Thread.run(self)
-
-        while not self.stopped():
-            time.sleep(1)  # self.consumer.sleep()
-            self.consumer.snapshot()
-
-    def stop(self):
-        '''
-        Stop DTrace.
-        '''
-        self._stop.set()
-
-    def stopped(self):
-        '''
-        Used to check the status.
-        '''
-        return self._stop.isSet()
 
 
 def my_walk(id, key, value):
@@ -59,7 +27,7 @@ def main():
     '''
     print 'Hint: if you don\'t get any output try running it with pfexec...'
 
-    thr = MyThread(SCRIPT)
+    thr = DTraceConsumerThread(SCRIPT, walk_func=my_walk, sleep=1)
     thr.start()
 
     # we will stop the thread after some time...
