@@ -91,6 +91,7 @@ cdef int walk(dtrace_aggdata_t * data, void * arg) with gil:
 
     return 5
 
+
 cdef class DTraceConsumer:
     '''
     A Pyton based DTrace consumer.
@@ -214,10 +215,12 @@ cdef class DTraceConsumer:
         args = (self.chew_func, self.chewrec_func)
         while i < runtime:
             dtrace_sleep(self.handle)
-            dtrace_work(self.handle, NULL, & chew, & chewrec, <void *>args)
-
-            time.sleep(1)
-            i += 1
+            status = dtrace_work(self.handle, NULL, & chew, & chewrec, <void *>args)
+            if status == 1:
+                i = runtime
+            else:
+                time.sleep(1)
+                i += 1
 
         dtrace_stop(self.handle)
 
@@ -358,7 +361,8 @@ cdef class DTraceContinuousConsumer:
         Snapshot the data and walk the aggregate.
         '''
         args = (self.chew_func, self.chewrec_func)
-        dtrace_work(self.handle, NULL, & chew, & chewrec, <void *>args)
+        status = dtrace_work(self.handle, NULL, & chew, & chewrec,
+                             <void *>args)
 
         if dtrace_aggregate_snap(self.handle) != 0:
             raise Exception('Failed to get the aggregate: ',
@@ -368,6 +372,7 @@ cdef class DTraceContinuousConsumer:
             raise Exception('Failed to walk aggregate: ',
                             dtrace_errmsg(NULL, dtrace_errno(self.handle)))
 
+        return status
 
 class DTraceConsumerThread(Thread):
     '''
@@ -404,7 +409,10 @@ class DTraceConsumerThread(Thread):
                 self.consumer.sleep()
             else:
                 time.sleep(self.sleep_time)
-            self.consumer.snapshot()
+
+            status = self.consumer.snapshot()
+            if status == 1:
+                self.stop()
 
     def stop(self):
         '''
