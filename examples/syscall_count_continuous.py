@@ -14,6 +14,7 @@ import time
 
 SCRIPT = 'syscall:::entry { @num[execname] = count(); }'
 
+
 def main():
     '''
     Run DTrace...

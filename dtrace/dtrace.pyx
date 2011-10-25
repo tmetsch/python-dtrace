@@ -4,6 +4,10 @@ import threading
 from threading import Thread
 from dtrace.dtrace_h cimport *
 
+# ----------------------------------------------------------------------------
+# The DTrace callbacks
+# ----------------------------------------------------------------------------
+
 
 cdef int chew(dtrace_probedata_t * data, void * arg) with gil:
     '''
@@ -60,7 +64,7 @@ cdef int walk(dtrace_aggdata_t * data, void * arg) with gil:
     Callback defined by DTrace - will call the Python callback.
     '''
 
-    key = []
+    keys = []
     value = None
 
     desc = data.dtada_desc
@@ -76,9 +80,9 @@ cdef int walk(dtrace_aggdata_t * data, void * arg) with gil:
 
         # TODO: need to extend this.
         if rec.dtrd_size == sizeof(uint32_t):
-            key.append((<int32_t *>address)[0])
+            keys.append((<int32_t *>address)[0])
         else:
-            key.append(<char *>address)
+            keys.append(<char *>address)
 
     if aggrec.dtrd_action in [DTRACEAGG_SUM, DTRACEAGG_MAX, DTRACEAGG_MIN,
                               DTRACEAGG_COUNT]:
@@ -87,9 +91,55 @@ cdef int walk(dtrace_aggdata_t * data, void * arg) with gil:
         raise Exception('Unsupported action')
 
     function = <object>arg
-    function(id, key, value)
+    function(id, keys, value)
 
     return 5
+
+# ----------------------------------------------------------------------------
+# Default Python callbacks
+# ----------------------------------------------------------------------------
+
+
+cpdef simple_chew(cpu):
+    '''
+    Simple chew function.
+
+    cpu -- CPU id.
+    '''
+    print 'Running on CPU:', cpu
+
+
+cpdef simple_chewrec(action):
+    '''
+    Simple chewrec callback.
+
+    action -- id of the action which was called.
+    '''
+    print 'Called action was:', action
+
+
+cpdef simple_out(value):
+    '''
+    A buffered output handler for all those prints.
+
+    value -- Line by line string of the DTrace output.
+    '''
+    print 'Value is:', value
+
+
+cpdef simple_walk(identifier, keys, value):
+    '''
+    Simple aggregation walker.
+
+    identifier -- the id.
+    keys -- list of keys.
+    value -- the value.
+    '''
+    print identifier, keys, value
+
+# ----------------------------------------------------------------------------
+# The consumers
+# ----------------------------------------------------------------------------
 
 
 cdef class DTraceConsumer:
@@ -109,22 +159,22 @@ cdef class DTraceConsumer:
         Constructor. Gets a DTrace handle and sets some options.
         '''
         if chew_func == None:
-            self.chew_func = self.simple_chew
+            self.chew_func = simple_chew
         else:
             self.chew_func = chew_func
 
         if chewrec_func == None:
-            self.chewrec_func = self.simple_chewrec
+            self.chewrec_func = simple_chewrec
         else:
             self.chewrec_func = chewrec_func
 
         if out_func == None:
-            self.out_func = self.simple_out
+            self.out_func = simple_out
         else:
             self.out_func = out_func
 
         if walk_func == None:
-            self.walk_func = self.simple_walk
+            self.walk_func = simple_walk
         else:
             self.walk_func = walk_func
 
@@ -144,40 +194,6 @@ cdef class DTraceConsumer:
         Release DTrace handle.
         '''
         dtrace_close(self.handle)
-
-    cpdef simple_chew(self, cpu):
-        '''
-        Simple chew function.
-
-        cpu -- CPU id.
-        '''
-        print 'Running on CPU:', cpu
-
-    cpdef simple_chewrec(self, action):
-        '''
-        Simple chewrec callback.
-
-        action -- id of the action which was called.
-        '''
-        print 'Called action was:', action
-
-    cpdef simple_out(self, value):
-        '''
-        A buffered output handler for all those prints.
-
-        value -- Line by line string of the DTrace output.
-        '''
-        print 'Value is:', value
-
-    cpdef simple_walk(self, identifier, key, value):
-        '''
-        Simple aggregation walker.
-
-        identifier -- the id.
-        key -- list of keys.
-        value -- the value.
-        '''
-        print identifier, key, value
 
     cpdef run_script(self, char * script, runtime=1):
         '''
@@ -215,7 +231,8 @@ cdef class DTraceConsumer:
         args = (self.chew_func, self.chewrec_func)
         while i < runtime:
             dtrace_sleep(self.handle)
-            status = dtrace_work(self.handle, NULL, & chew, & chewrec, <void *>args)
+            status = dtrace_work(self.handle, NULL, & chew, & chewrec,
+                                 <void *>args)
             if status == 1:
                 i = runtime
             else:
@@ -252,22 +269,22 @@ cdef class DTraceContinuousConsumer:
         self.script = script
 
         if chew_func == None:
-            self.chew_func = self.simple_chew
+            self.chew_func = simple_chew
         else:
             self.chew_func = chew_func
 
         if chewrec_func == None:
-            self.chewrec_func = self.simple_chewrec
+            self.chewrec_func = simple_chewrec
         else:
             self.chewrec_func = chewrec_func
 
         if out_func == None:
-            self.out_func = self.simple_out
+            self.out_func = simple_out
         else:
             self.out_func = out_func
 
         if walk_func == None:
-            self.walk_func = self.simple_walk
+            self.walk_func = simple_walk
         else:
             self.walk_func = walk_func
 
@@ -313,40 +330,6 @@ cdef class DTraceContinuousConsumer:
         if dtrace_go(self.handle) != 0:
             raise Exception('Failed to run_script: ',
                             dtrace_errmsg(NULL, dtrace_errno(self.handle)))
-
-    cpdef simple_chew(self, cpu):
-        '''
-        Simple chew function.
-
-        cpu -- CPU id.
-        '''
-        print 'Running on CPU:', cpu
-
-    cpdef simple_chewrec(self, action):
-        '''
-        Simple chewrec callback.
-
-        action -- id of the action which was called.
-        '''
-        print 'Called action was:', action
-
-    cpdef simple_out(self, value):
-        '''
-        A buffered output handler for all those prints.
-
-        value -- Line by line string of the DTrace output.
-        '''
-        print 'Value is:', value
-
-    cpdef simple_walk(self, identifier, key, value):
-        '''
-        Simple aggregation walker.
-
-        identifier -- the id.
-        key -- list of keys.
-        value -- the value.
-        '''
-        print identifier, key, value
 
     def sleep(self):
         '''

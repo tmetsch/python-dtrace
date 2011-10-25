@@ -261,8 +261,6 @@ class DTraceConsumerThread(Thread):
             raise Exception('Unable to set the stdout buffered writer.')
 
         # compile
-        #pfile = self.script
-        #prg = LIBRARY.dtrace_program_fcompile(self.handle, pfile, 10, 0, None);
         prg = LIBRARY.dtrace_program_strcompile(self.handle,
                                                      self.script, 3, 4, 0,
                                                      None)

@@ -34,8 +34,6 @@ def main():
     '''
     Run DTrace...
     '''
-    print 'Hint: if you don\'t get any output try running it with pfexec...'
-
     dtrace = DTraceConsumerThread(SCRIPT, walk_func=walk)
     dtrace.start()
 

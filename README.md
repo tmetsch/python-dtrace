@@ -42,7 +42,7 @@ like this:
     def simple_out(value):
         pass
 
-    def simple_walk(id, key, value):
+    def simple_walk(identifier, keys, value):
         pass
 
 Those functions can also be part of a class. Simply add the self parameter as
@@ -51,11 +51,11 @@ the first one:
     def simple_chew(self, cpu):
         pass
 
-The DTraceConsumer has a run_script function which will run a provided DTrace
+The DTraceConsumer has a *run_script* function which will run a provided DTrace
 script for some time or till it is finished. The time on how long it is run can
 be provided as parameter just like the script. During the DTrace chew, chewrec
 and the out callbacks are called. When the run is finished the aggregation will
-be walked.
+be walked - Thus you can aggregate for 3 seconds and than see the results.
 
 There also exists and DTraceConsumerThread which can be used to continuously
 run DTrace in the background. This might come in handy when you want to
