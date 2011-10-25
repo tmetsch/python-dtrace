@@ -1,9 +1,11 @@
 
 from libc.stdint cimport int32_t, uint32_t
 
+
 cdef extern from "libelf_workaround.h":
     # lib elf workaround :-/
     pass
+
 
 cdef extern from "sys/dtrace.h":
 

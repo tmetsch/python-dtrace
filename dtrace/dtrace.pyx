@@ -4,6 +4,7 @@ import threading
 from threading import Thread
 from dtrace.dtrace_h cimport *
 
+
 cdef int chew(dtrace_probedata_t * data, void * arg) with gil:
     '''
     Callback defined by DTrace - will vall the Python callback.
@@ -19,6 +20,7 @@ cdef int chew(dtrace_probedata_t * data, void * arg) with gil:
     function(cpu)
 
     return 0
+
 
 cdef int chewrec(dtrace_probedata_t * data, dtrace_recdesc_t * rec,
                  void * arg) with gil:
@@ -39,6 +41,7 @@ cdef int chewrec(dtrace_probedata_t * data, dtrace_recdesc_t * rec,
 
     return 0
 
+
 cdef int buf_out(dtrace_bufdata_t * buf_data, void * arg) with gil:
     '''
     Callback defined by DTrace - will vall the Python callback.
@@ -50,6 +53,7 @@ cdef int buf_out(dtrace_bufdata_t * buf_data, void * arg) with gil:
     function(value)
 
     return 0
+
 
 cdef int walk(dtrace_aggdata_t * data, void * arg) with gil:
     '''
@@ -76,17 +80,16 @@ cdef int walk(dtrace_aggdata_t * data, void * arg) with gil:
         else:
             key.append(<char *>address)
 
-
     if aggrec.dtrd_action in [DTRACEAGG_SUM, DTRACEAGG_MAX, DTRACEAGG_MIN,
                               DTRACEAGG_COUNT]:
         value = (<int *>(data.dtada_data + aggrec.dtrd_offset))[0]
     else:
-        print 'unsupported aggregating action!'
+        raise Exception('Unsupported action')
 
     function = <object>arg
     function(id, key, value)
 
-    return 0
+    return 5
 
 cdef class DTraceConsumer:
     '''
@@ -165,7 +168,7 @@ cdef class DTraceConsumer:
         '''
         print 'Value is:', value
 
-    cpdef simple_walk(self, id, key, value):
+    cpdef simple_walk(self, identifier, key, value):
         '''
         Simple aggregation walker.
 
@@ -332,7 +335,7 @@ cdef class DTraceContinuousConsumer:
         '''
         print 'Value is:', value
 
-    cpdef simple_walk(self, id, key, value):
+    cpdef simple_walk(self, identifier, key, value):
         '''
         Simple aggregation walker.
 
@@ -364,6 +367,7 @@ cdef class DTraceContinuousConsumer:
                                        <void *>self.walk_func) != 0:
             raise Exception('Failed to walk aggregate: ',
                             dtrace_errmsg(NULL, dtrace_errno(self.handle)))
+
 
 class DTraceConsumerThread(Thread):
     '''
