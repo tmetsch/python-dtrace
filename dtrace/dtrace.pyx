@@ -172,11 +172,11 @@ cdef class DTraceConsumer:
         '''
         Simple aggregation walker.
 
-        id -- the id.
+        identifier -- the id.
         key -- list of keys.
         value -- the value.
         '''
-        print id, key, value
+        print identifier, key, value
 
     cpdef run_script(self, char * script, runtime=1):
         '''
@@ -339,11 +339,11 @@ cdef class DTraceContinuousConsumer:
         '''
         Simple aggregation walker.
 
-        id -- the id.
+        identifier -- the id.
         key -- list of keys.
         value -- the value.
         '''
-        print id, key, value
+        print identifier, key, value
 
     def sleep(self):
         '''
