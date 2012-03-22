@@ -160,15 +160,23 @@ cdef class DTraceConsumer:
         '''
         if chew_func is None:
             self.chew_func = simple_chew
+        else:
+            self.chew_func = chew_func
 
         if chewrec_func is None:
             self.chewrec_func = simple_chewrec
+        else:
+            self.chewrec_func = chewrec_func
 
         if out_func is None:
             self.out_func = simple_out
+        else:
+            self.out_func = out_func
 
         if walk_func is None:
             self.walk_func = simple_walk
+        else:
+            self.walk_func = walk_func            
 
         self.handle = dtrace_open(3, 0, NULL)
         if self.handle == NULL:
@@ -262,15 +270,23 @@ cdef class DTraceContinuousConsumer:
 
         if chew_func is None:
             self.chew_func = simple_chew
+        else:
+            self.chew_func = chew_func
 
         if chewrec_func is None:
             self.chewrec_func = simple_chewrec
+        else:
+            self.chewrec_func = chewrec_func
 
         if out_func is None:
             self.out_func = simple_out
+        else:
+            self.out_func = out_func
 
         if walk_func is None:
             self.walk_func = simple_walk
+        else:
+            self.walk_func = walk_func     
 
         self.handle = dtrace_open(3, 0, NULL)
         if self.handle == NULL:
