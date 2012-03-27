@@ -100,8 +100,4 @@ functions are named: **simple_chew**, **simple_chewrec**, **simple_walk** and
 The examples for using this libdtrace wrapper can be found in the
 *examples/ctypes* folder.
 
-Also note that I am looking into switching to cython to see if the callback
-functions can be handled in a nicer way. Please see the cython-approach
-branch.
-
-(c) 2011 Thijs Metsch
+(c) 2011-2012 Thijs Metsch
