@@ -244,29 +244,15 @@ cdef class DTraceConsumer:
         '''
         Constructor. Gets a DTrace handle and sets some options.
         '''
-        if chew_func is None:
-            self.chew_func = simple_chew
-        else:
-            self.chew_func = chew_func
+        self.chew_func = chew_func or simple_chew
+        self.chewrec_func = chewrec_func or simple_chewrec
+        self.out_func = out_func or simple_out
+        self.walk_func = walk_func or simple_walk
 
-        if chewrec_func is None:
-            self.chewrec_func = simple_chewrec
-        else:
-            self.chewrec_func = chewrec_func
-
-        if out_func is None:
-            self.out_func = simple_out
-        else:
-            self.out_func = out_func
-
-        if walk_func is None:
-            self.walk_func = simple_walk
-        else:
-            self.walk_func = walk_func
-
-        self.handle = dtrace_open(3, 0, NULL)
+        cdef int err
+        self.handle = dtrace_open(3, 0, &err)
         if self.handle == NULL:
-            raise Exception(dtrace_errmsg(NULL, dtrace_errno(self.handle)))
+            raise Exception(dtrace_errmsg(NULL, err))
 
         # set buffer options
         if dtrace_setopt(self.handle, 'bufsize', '4m') != 0:
@@ -352,31 +338,15 @@ cdef class DTraceContinuousConsumer:
         '''
         Constructor. will get the DTrace handle
         '''
-        self.script = script
+        self.chew_func = chew_func or simple_chew
+        self.chewrec_func = chewrec_func or simple_chewrec
+        self.out_func = out_func or simple_out
+        self.walk_func = walk_func or simple_walk  
 
-        if chew_func is None:
-            self.chew_func = simple_chew
-        else:
-            self.chew_func = chew_func
-
-        if chewrec_func is None:
-            self.chewrec_func = simple_chewrec
-        else:
-            self.chewrec_func = chewrec_func
-
-        if out_func is None:
-            self.out_func = simple_out
-        else:
-            self.out_func = out_func
-
-        if walk_func is None:
-            self.walk_func = simple_walk
-        else:
-            self.walk_func = walk_func
-
-        self.handle = dtrace_open(3, 0, NULL)
+        cdef int err
+        self.handle = dtrace_open(3, 0, &err)
         if self.handle == NULL:
-            raise Exception(dtrace_errmsg(NULL, dtrace_errno(self.handle)))
+            raise Exception(dtrace_errmsg(NULL, err))
 
         # set buffer options
         if dtrace_setopt(self.handle, 'bufsize', '4m') != 0:
