@@ -1,22 +1,38 @@
 
-from libc.stdint cimport int32_t, uint32_t
+from libc.stdint cimport uint16_t, int32_t, uint32_t, int64_t, uint64_t
 
+#from libc.stdint cimport *
 
 cdef extern from "libelf_workaround.h":
     # lib elf workaround :-/
     pass
 
 
+cdef extern from "sys/int_limits.h":
+    # needed for quantize mths.
+    cdef int64_t INT64_MAX
+    cdef int64_t INT64_MIN
+
+
 cdef extern from "sys/dtrace.h":
 
-    ctypedef enum agg_types:
+    ctypedef enum agg_actions:
         # Taken from sys/dtrace.h:454
         # Needs to be in enum because ctypes wants it that way :-/
         DTRACEACT_AGGREGATION = 0x0700
         DTRACEAGG_COUNT = (DTRACEACT_AGGREGATION + 1)
         DTRACEAGG_MIN = (DTRACEACT_AGGREGATION + 2)
         DTRACEAGG_MAX = (DTRACEACT_AGGREGATION + 3)
+        DTRACEAGG_AVG = (DTRACEACT_AGGREGATION + 4)
         DTRACEAGG_SUM = (DTRACEACT_AGGREGATION + 5)
+        # + 6 is DTRACEAGG_STDDEV (unsupported)
+        DTRACEAGG_QUANTIZE = (DTRACEACT_AGGREGATION + 7)
+        DTRACEAGG_LQUANTIZE = (DTRACEACT_AGGREGATION + 8)
+
+    ctypedef enum quantize_types:
+        # NBBY = 8
+        DTRACE_QUANTIZE_NBUCKETS = (((sizeof (uint64_t) * 8) - 1) * 2 + 1)
+        DTRACE_QUANTIZE_ZEROBUCKET = ((sizeof (uint64_t) * 8) - 1)
 
     ctypedef struct dtrace_recdesc_t:
         # Taken from sys/dtrace.h:931
@@ -29,6 +45,10 @@ cdef extern from "sys/dtrace.h":
         int dtagd_nrecs
         int dtagd_varid
         dtrace_recdesc_t dtagd_rec[1]
+
+    cdef uint16_t DTRACE_LQUANTIZE_STEP(long x)
+    cdef uint16_t DTRACE_LQUANTIZE_LEVELS(long x)
+    cdef int32_t DTRACE_LQUANTIZE_BASE(long x)
 
 
 cdef extern from "dtrace.h":

@@ -11,7 +11,7 @@ from dtrace.dtrace_h cimport *
 
 cdef int chew(dtrace_probedata_t * data, void * arg) with gil:
     '''
-    Callback defined by DTrace - will vall the Python callback.
+    Callback defined by DTrace - will call the Python callback.
 
     Called once per fired probe...
     '''
@@ -48,7 +48,7 @@ cdef int chewrec(dtrace_probedata_t * data, dtrace_recdesc_t * rec,
 
 cdef int buf_out(dtrace_bufdata_t * buf_data, void * arg) with gil:
     '''
-    Callback defined by DTrace - will vall the Python callback.
+    Callback defined by DTrace - will call the Python callback.
     '''
 
     value = buf_data.dtbda_buffered.strip()
@@ -70,6 +70,7 @@ cdef int walk(dtrace_aggdata_t * data, void * arg) with gil:
     desc = data.dtada_desc
     id = desc.dtagd_varid
     cdef dtrace_recdesc_t *rec
+    cdef int64_t *tmp
 
     aggrec = &desc.dtagd_rec[desc.dtagd_nrecs - 1]
     action = aggrec.dtrd_action
@@ -87,13 +88,98 @@ cdef int walk(dtrace_aggdata_t * data, void * arg) with gil:
     if aggrec.dtrd_action in [DTRACEAGG_SUM, DTRACEAGG_MAX, DTRACEAGG_MIN,
                               DTRACEAGG_COUNT]:
         value = (<int *>(data.dtada_data + aggrec.dtrd_offset))[0]
+    elif aggrec.dtrd_action == DTRACEAGG_AVG:
+        tmp = <int64_t *>(data.dtada_data + aggrec.dtrd_offset)
+        value = tmp[1] / tmp[0]
+    elif aggrec.dtrd_action == DTRACEAGG_QUANTIZE:
+        tmp = <int64_t *>(data.dtada_data + aggrec.dtrd_offset)
+        ranges = get_quantize_ranges()
+        quantize = []
+        for i in range(0, len(ranges)):
+            quantize.append((ranges[i], tmp[i]))
+
+        value = quantize
+    elif aggrec.dtrd_action == DTRACEAGG_LQUANTIZE:
+        tmp = <int64_t *>(data.dtada_data + aggrec.dtrd_offset)
+        quantize = []
+        tmp_arg = tmp[0]
+
+        ranges = get_lquantize_ranges(tmp_arg)
+        levels = (aggrec.dtrd_size / sizeof (uint64_t)) - 1
+        for i in range(0, levels):
+            # i + 1 since tmp[0] is already 'used'
+            quantize.append((ranges[i], tmp[i + 1]))
+
+        value = quantize
     else:
-        raise Exception('Unsupported action')
+        raise Exception('Unsupported DTrace action')
 
     function = <object>arg
     function(id, keys, value)
 
+    # DTRACE_AGGWALK_REMOVE
     return 5
+
+# ----------------------------------------------------------------------------
+# Helper functions for the walk...
+# ----------------------------------------------------------------------------
+
+
+cdef bucket_val(buck):
+    if buck < DTRACE_QUANTIZE_ZEROBUCKET:
+       return -(1LL << (DTRACE_QUANTIZE_ZEROBUCKET - 1 - (buck)))
+    else:
+       if buck == DTRACE_QUANTIZE_ZEROBUCKET:
+           return 0
+       else:
+           return 1LL << ((buck) - DTRACE_QUANTIZE_ZEROBUCKET - 1)
+
+
+cdef get_quantize_ranges():
+    ranges = []
+
+    for i in range(0, DTRACE_QUANTIZE_NBUCKETS):
+        if i < DTRACE_QUANTIZE_ZEROBUCKET:
+            if i > 0:
+                mini = bucket_val(i -1) + 1
+            else:
+                # INT64_MIN
+                mini = INT64_MIN
+            maxi = bucket_val(i)
+        elif i == DTRACE_QUANTIZE_ZEROBUCKET:
+            mini = 0
+            maxi = 0
+        else:
+            mini = bucket_val(i)
+            if i < DTRACE_QUANTIZE_NBUCKETS - 1:
+                maxi = bucket_val(i + 1) -1
+            else:
+                # INT64_MAX
+                maxi = INT64_MAX
+        ranges.append((mini, maxi))
+
+    return ranges
+
+
+cdef get_lquantize_ranges(uint64_t arg):
+    ranges = []
+
+    base = DTRACE_LQUANTIZE_BASE(arg);
+    step = DTRACE_LQUANTIZE_STEP(arg);
+    levels = DTRACE_LQUANTIZE_LEVELS(arg);
+
+    for i in range(0, levels + 2):
+        if i == 0:
+            mini = INT64_MIN
+        else:
+            mini = base + ((i - 1) * step)
+        if i > levels:
+            maxi = INT64_MAX
+        else:
+            maxi = base + (i * step) - 1
+        ranges.append((mini, maxi))
+
+    return ranges
 
 # ----------------------------------------------------------------------------
 # Default Python callbacks
@@ -160,15 +246,23 @@ cdef class DTraceConsumer:
         '''
         if chew_func is None:
             self.chew_func = simple_chew
+        else:
+            self.chew_func = chew_func
 
         if chewrec_func is None:
             self.chewrec_func = simple_chewrec
+        else:
+            self.chewrec_func = chewrec_func
 
         if out_func is None:
             self.out_func = simple_out
+        else:
+            self.out_func = out_func
 
         if walk_func is None:
             self.walk_func = simple_walk
+        else:
+            self.walk_func = walk_func
 
         self.handle = dtrace_open(3, 0, NULL)
         if self.handle == NULL:
@@ -262,15 +356,23 @@ cdef class DTraceContinuousConsumer:
 
         if chew_func is None:
             self.chew_func = simple_chew
+        else:
+            self.chew_func = chew_func
 
         if chewrec_func is None:
             self.chewrec_func = simple_chewrec
+        else:
+            self.chewrec_func = chewrec_func
 
         if out_func is None:
             self.out_func = simple_out
+        else:
+            self.out_func = out_func
 
         if walk_func is None:
             self.walk_func = simple_walk
+        else:
+            self.walk_func = walk_func
 
         self.handle = dtrace_open(3, 0, NULL)
         if self.handle == NULL:
