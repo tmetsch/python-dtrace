@@ -163,9 +163,10 @@ cdef class DTraceConsumer:
         self.out_func = out_func or simple_out
         self.walk_func = walk_func or simple_walk
 
-        self.handle = dtrace_open(3, 0, NULL)
+        cdef int err
+        self.handle = dtrace_open(3, 0, &err)
         if self.handle == NULL:
-            raise Exception(dtrace_errmsg(NULL, dtrace_errno(self.handle)))
+            raise Exception(dtrace_errmsg(NULL, err))
 
         # set buffer options
         if dtrace_setopt(self.handle, 'bufsize', '4m') != 0:
@@ -256,9 +257,10 @@ cdef class DTraceContinuousConsumer:
         self.out_func = out_func or simple_out
         self.walk_func = walk_func or simple_walk  
 
-        self.handle = dtrace_open(3, 0, NULL)
+        cdef int err
+        self.handle = dtrace_open(3, 0, &err)
         if self.handle == NULL:
-            raise Exception(dtrace_errmsg(NULL, dtrace_errno(self.handle)))
+            raise Exception(dtrace_errmsg(NULL, err))
 
         # set buffer options
         if dtrace_setopt(self.handle, 'bufsize', '4m') != 0:
