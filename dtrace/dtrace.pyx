@@ -125,34 +125,24 @@ cdef int walk(dtrace_aggdata_t * data, void * arg) with gil:
 # ----------------------------------------------------------------------------
 
 
-cdef bucket_val(buck):
-    if buck < DTRACE_QUANTIZE_ZEROBUCKET:
-       return -(1LL << (DTRACE_QUANTIZE_ZEROBUCKET - 1 - (buck)))
-    else:
-       if buck == DTRACE_QUANTIZE_ZEROBUCKET:
-           return 0
-       else:
-           return 1LL << ((buck) - DTRACE_QUANTIZE_ZEROBUCKET - 1)
-
-
 cdef get_quantize_ranges():
     ranges = []
 
     for i in range(0, DTRACE_QUANTIZE_NBUCKETS):
         if i < DTRACE_QUANTIZE_ZEROBUCKET:
             if i > 0:
-                mini = bucket_val(i -1) + 1
+                mini = DTRACE_QUANTIZE_BUCKETVAL(i -1) + 1
             else:
                 # INT64_MIN
                 mini = INT64_MIN
-            maxi = bucket_val(i)
+            maxi = DTRACE_QUANTIZE_BUCKETVAL(i)
         elif i == DTRACE_QUANTIZE_ZEROBUCKET:
             mini = 0
             maxi = 0
         else:
-            mini = bucket_val(i)
+            mini = DTRACE_QUANTIZE_BUCKETVAL(i)
             if i < DTRACE_QUANTIZE_NBUCKETS - 1:
-                maxi = bucket_val(i + 1) -1
+                maxi = DTRACE_QUANTIZE_BUCKETVAL(i + 1) -1
             else:
                 # INT64_MAX
                 maxi = INT64_MAX
@@ -341,7 +331,8 @@ cdef class DTraceContinuousConsumer:
         self.chew_func = chew_func or simple_chew
         self.chewrec_func = chewrec_func or simple_chewrec
         self.out_func = out_func or simple_out
-        self.walk_func = walk_func or simple_walk  
+        self.walk_func = walk_func or simple_walk
+        self.script = script
 
         cdef int err
         self.handle = dtrace_open(3, 0, &err)

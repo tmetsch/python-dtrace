@@ -49,7 +49,7 @@ cdef extern from "sys/dtrace.h":
     cdef uint16_t DTRACE_LQUANTIZE_STEP(long x)
     cdef uint16_t DTRACE_LQUANTIZE_LEVELS(long x)
     cdef int32_t DTRACE_LQUANTIZE_BASE(long x)
-
+    cdef int64_t DTRACE_QUANTIZE_BUCKETVAL(long buck)
 
 cdef extern from "dtrace.h":
 
