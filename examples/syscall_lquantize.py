@@ -3,7 +3,7 @@
 '''
 Use the Python DTrace consumer with a script using lquantize.
 
-Created on Mar 28 10, 2012
+Created on Mar 28, 2012
 
 @author: tmetsch
 '''
