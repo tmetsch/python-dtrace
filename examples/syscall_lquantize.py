@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
 '''
-Use the Python DTrace consumer and run a syscall counter DTrace script.
+Use the Python DTrace consumer with a script using lquantize.
 
-Created on Oct 10, 2011
+Created on Mar 28 10, 2012
 
 @author: tmetsch
 '''
