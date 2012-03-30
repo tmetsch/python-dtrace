@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 '''
-Receives up to data from the DTrace consumer.
+Receives up to date data from the DTrace consumer.
 
 Created on Mar 31, 2012
 
