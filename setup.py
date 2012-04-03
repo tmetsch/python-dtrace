@@ -31,7 +31,7 @@ setup(name='python-dtrace',
       description='DTrace consumer for Python based on libdtrace. Use Python'
                   + ' as DTrace Consumer and Provider! See the homepage for'
                   + ' more information.',
-      license='TBD',
+      license='MIT',
       keywords='DTrace',
       url='http://tmetsch.github.com/python-dtrace/',
       packages=['dtrace_ctypes'],
