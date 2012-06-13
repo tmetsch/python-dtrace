@@ -14,11 +14,11 @@ from dtrace import DTraceConsumer
 SCRIPT = 'syscall:::entry { @num[execname] = count(); }'
 
 
-def my_walk(id, key, value):
+def my_walk(action, identifier, key, value):
     '''
     Aggregate walker.
     '''
-    print '>', id, key, value
+    print '>', identifier, key, value
 
 
 def main():
