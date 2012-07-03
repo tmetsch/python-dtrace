@@ -2,7 +2,7 @@
 import time
 import threading
 from threading import Thread
-from dtrace.dtrace_h cimport *
+from dtrace_h cimport *
 
 # ----------------------------------------------------------------------------
 # The DTrace callbacks

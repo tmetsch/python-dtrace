@@ -9,3 +9,4 @@ dist/
 out.txt
 *.pyc
 dtrace/dtrace.c
+.tox
