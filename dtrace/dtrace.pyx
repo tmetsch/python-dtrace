@@ -2,7 +2,7 @@
 import time
 import threading
 from threading import Thread
-from dtrace.dtrace_h cimport *
+from dtrace_h cimport *
 
 # ----------------------------------------------------------------------------
 # The DTrace callbacks
@@ -115,7 +115,7 @@ cdef int walk(dtrace_aggdata_t * data, void * arg) with gil:
         raise Exception('Unsupported DTrace aggregation function!')
 
     function = <object>arg
-    function(id, action, keys, value)
+    function(action, id, keys, value)
 
     # DTRACE_AGGWALK_REMOVE
     return 5
@@ -203,16 +203,17 @@ cpdef simple_out(value):
     print 'Value is:', value
 
 
-cpdef simple_walk(identifier, action, keys, value):
+cpdef simple_walk(action, identifier, keys, value):
     '''
     Simple aggregation walker.
 
+    action -- the aggregation action.
     identifier -- the id.
     action -- type of action (sum, avg, ...)
     keys -- list of keys.
     value -- the value.
     '''
-    print identifier, action, keys, value
+    print action, identifier, keys, value
 
 # ----------------------------------------------------------------------------
 # The consumers
@@ -247,16 +248,32 @@ cdef class DTraceConsumer:
 
         # set buffer options
         if dtrace_setopt(self.handle, 'bufsize', '4m') != 0:
-            raise Exception(dtrace_errmsg(NULL, dtrace_errno(self.handle)))
+            raise Exception(dtrace_errmsg(self.handle, 
+                                          dtrace_errno(self.handle)))
 
         if dtrace_setopt(self.handle, 'aggsize', '4m') != 0:
-            raise Exception(dtrace_errmsg(NULL, dtrace_errno(self.handle)))
+            raise Exception(dtrace_errmsg(self.handle,
+                                          dtrace_errno(self.handle)))
 
     def __del__(self):
         '''
         Release DTrace handle.
         '''
         dtrace_close(self.handle)
+
+    cpdef compile_script(self, char * script):
+        '''
+        Compile a DTrace script and return errors if any.
+        
+        script -- The script to compile.
+        '''
+        cdef dtrace_prog_t * prg
+        prg = dtrace_program_strcompile(self.handle, script,
+                                        DTRACE_PROBESPEC_NAME, 0, 0, NULL)
+        if prg == NULL:
+            raise Exception('Unable to compile the script: ',
+                            dtrace_errmsg(self.handle,
+                           		          dtrace_errno(self.handle)))
 
     cpdef run_script(self, char * script, runtime=1):
         '''
@@ -280,15 +297,18 @@ cdef class DTraceConsumer:
                                         DTRACE_PROBESPEC_NAME, 0, 0, NULL)
         if prg == NULL:
             raise Exception('Unable to compile the script: ',
-                            dtrace_errmsg(NULL, dtrace_errno(self.handle)))
+                            dtrace_errmsg(self.handle,
+                                          dtrace_errno(self.handle)))
 
         # run
         if dtrace_program_exec(self.handle, prg, NULL) == -1:
             raise Exception('Failed to execute: ',
-                            dtrace_errmsg(NULL, dtrace_errno(self.handle)))
+                            dtrace_errmsg(self.handle,
+                                          dtrace_errno(self.handle)))
         if dtrace_go(self.handle) != 0:
             raise Exception('Failed to run_script: ',
-                            dtrace_errmsg(NULL, dtrace_errno(self.handle)))
+                            dtrace_errmsg(self.handle,
+			                              dtrace_errno(self.handle)))
 
         i = 0
         args = (self.chew_func, self.chewrec_func)
@@ -310,7 +330,8 @@ cdef class DTraceConsumer:
         if dtrace_aggregate_walk_valsorted(self.handle, & walk,
                                            <void *>self.walk_func) != 0:
             raise Exception('Failed to walk the aggregate: ',
-                            dtrace_errmsg(NULL, dtrace_errno(self.handle)))
+                            dtrace_errmsg(self.handle,
+                                          dtrace_errno(self.handle)))
 
 
 cdef class DTraceContinuousConsumer:
@@ -343,10 +364,12 @@ cdef class DTraceContinuousConsumer:
 
         # set buffer options
         if dtrace_setopt(self.handle, 'bufsize', '4m') != 0:
-            raise Exception(dtrace_errmsg(NULL, dtrace_errno(self.handle)))
+            raise Exception(dtrace_errmsg(self.handle,
+                                          dtrace_errno(self.handle)))
 
         if dtrace_setopt(self.handle, 'aggsize', '4m') != 0:
-            raise Exception(dtrace_errmsg(NULL, dtrace_errno(self.handle)))
+            raise Exception(dtrace_errmsg(self.handle,
+                                          dtrace_errno(self.handle)))
 
     def __del__(self):
         '''
@@ -370,15 +393,18 @@ cdef class DTraceContinuousConsumer:
                                         DTRACE_PROBESPEC_NAME, 0, 0, NULL)
         if prg == NULL:
             raise Exception('Unable to compile the script: ',
-                            dtrace_errmsg(NULL, dtrace_errno(self.handle)))
+                            dtrace_errmsg(self.handle,
+                           		          dtrace_errno(self.handle)))
 
         # run
         if dtrace_program_exec(self.handle, prg, NULL) == -1:
             raise Exception('Failed to execute: ',
-                            dtrace_errmsg(NULL, dtrace_errno(self.handle)))
+                            dtrace_errmsg(self.handle,
+					  dtrace_errno(self.handle)))
         if dtrace_go(self.handle) != 0:
             raise Exception('Failed to run_script: ',
-                            dtrace_errmsg(NULL, dtrace_errno(self.handle)))
+                            dtrace_errmsg(self.handle,
+				                    	  dtrace_errno(self.handle)))
 
     def sleep(self):
         '''
@@ -398,13 +424,16 @@ cdef class DTraceContinuousConsumer:
 
         if dtrace_aggregate_snap(self.handle) != 0:
             raise Exception('Failed to get the aggregate: ',
-                            dtrace_errmsg(NULL, dtrace_errno(self.handle)))
+                            dtrace_errmsg(self.handle,
+			                  dtrace_errno(self.handle)))
         if dtrace_aggregate_walk_valsorted(self.handle, & walk,
                                            <void *>self.walk_func) != 0:
             raise Exception('Failed to walk aggregate: ',
-                            dtrace_errmsg(NULL, dtrace_errno(self.handle)))
+                            dtrace_errmsg(self.handle,
+                                          dtrace_errno(self.handle)))
 
         return status
+
 
 class DTraceConsumerThread(Thread):
     '''

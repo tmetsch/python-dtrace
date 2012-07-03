@@ -42,7 +42,7 @@ like this:
     def simple_out(value):
         pass
 
-    def simple_walk(identifier, keys, value):
+    def simple_walk(action, identifier, keys, value):
         pass
 
 Those functions can also be part of a class. Simply add the self parameter as

@@ -14,7 +14,7 @@ from dtrace import DTraceConsumer
 SCRIPT = 'sysinfo:::readch { @dist[execname] = quantize(arg0); }'
 
 
-def my_walk(id, key, values):
+def my_walk(action, identifier, key, values):
     print key
     for item in values:
         if item[0][0] > 0 and item[1] > 0:

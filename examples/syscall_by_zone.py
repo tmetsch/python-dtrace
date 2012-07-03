@@ -14,7 +14,7 @@ import time
 SCRIPT = 'syscall:::entry { @num[zonename] = count(); }'
 
 
-def my_walk(identifier, key, value):
+def my_walk(action, identifier, key, value):
     '''
     A simple aggregate walker.
     '''
