@@ -21,13 +21,13 @@ try:
 except ImportError:
     BUILD_EXTENSION = {}
     EXT_MODULES = None
-    print('Cython seems not to be present. Currently you will only be able '
-          + 'to use the ctypes wrapper. Or you can install cython and try '
-          + 'again.')
+    print('WARNING: Cython seems not to be present. Currently you will only' \
+          ' be able to use the ctypes wrapper. Or you can install cython and' \
+          ' try again.')
 
 
 setup(name='python-dtrace',
-      version='0.0.5',
+      version='0.0.7',
       description='DTrace consumer for Python based on libdtrace. Use Python'
                   + ' as DTrace Consumer and Provider! See the homepage for'
                   + ' more information.',

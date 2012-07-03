@@ -85,13 +85,13 @@ cdef int walk(dtrace_aggdata_t * data, void * arg) with gil:
         else:
             keys.append(<char *>address)
 
-    if aggrec.dtrd_action in [DTRACEAGG_SUM, DTRACEAGG_MAX, DTRACEAGG_MIN,
-                              DTRACEAGG_COUNT]:
+    if action in [DTRACEAGG_SUM, DTRACEAGG_MAX, DTRACEAGG_MIN,
+                  DTRACEAGG_COUNT]:
         value = (<int *>(data.dtada_data + aggrec.dtrd_offset))[0]
-    elif aggrec.dtrd_action == DTRACEAGG_AVG:
+    elif action == DTRACEAGG_AVG:
         tmp = <int64_t *>(data.dtada_data + aggrec.dtrd_offset)
         value = tmp[1] / tmp[0]
-    elif aggrec.dtrd_action == DTRACEAGG_QUANTIZE:
+    elif action == DTRACEAGG_QUANTIZE:
         tmp = <int64_t *>(data.dtada_data + aggrec.dtrd_offset)
         ranges = get_quantize_ranges()
         quantize = []
@@ -99,7 +99,7 @@ cdef int walk(dtrace_aggdata_t * data, void * arg) with gil:
             quantize.append((ranges[i], tmp[i]))
 
         value = quantize
-    elif aggrec.dtrd_action == DTRACEAGG_LQUANTIZE:
+    elif action == DTRACEAGG_LQUANTIZE:
         tmp = <int64_t *>(data.dtada_data + aggrec.dtrd_offset)
         quantize = []
         tmp_arg = tmp[0]
@@ -112,10 +112,10 @@ cdef int walk(dtrace_aggdata_t * data, void * arg) with gil:
 
         value = quantize
     else:
-        raise Exception('Unsupported DTrace action')
+        raise Exception('Unsupported DTrace aggregation function!')
 
     function = <object>arg
-    function(id, keys, value)
+    function(id, action, keys, value)
 
     # DTRACE_AGGWALK_REMOVE
     return 5
@@ -203,15 +203,16 @@ cpdef simple_out(value):
     print 'Value is:', value
 
 
-cpdef simple_walk(identifier, keys, value):
+cpdef simple_walk(identifier, action, keys, value):
     '''
     Simple aggregation walker.
 
     identifier -- the id.
+    action -- type of action (sum, avg, ...)
     keys -- list of keys.
     value -- the value.
     '''
-    print identifier, keys, value
+    print identifier, action, keys, value
 
 # ----------------------------------------------------------------------------
 # The consumers
@@ -291,6 +292,7 @@ cdef class DTraceConsumer:
 
         i = 0
         args = (self.chew_func, self.chewrec_func)
+
         while i < runtime:
             dtrace_sleep(self.handle)
             status = dtrace_work(self.handle, NULL, & chew, & chewrec,
@@ -300,7 +302,7 @@ cdef class DTraceConsumer:
             else:
                 time.sleep(1)
                 i += 1
-
+                
         dtrace_stop(self.handle)
 
         # walk the aggregate
@@ -397,8 +399,8 @@ cdef class DTraceContinuousConsumer:
         if dtrace_aggregate_snap(self.handle) != 0:
             raise Exception('Failed to get the aggregate: ',
                             dtrace_errmsg(NULL, dtrace_errno(self.handle)))
-        if dtrace_aggregate_walk(self.handle, & walk,
-                                       <void *>self.walk_func) != 0:
+        if dtrace_aggregate_walk_valsorted(self.handle, & walk,
+                                           <void *>self.walk_func) != 0:
             raise Exception('Failed to walk aggregate: ',
                             dtrace_errmsg(NULL, dtrace_errno(self.handle)))
 
@@ -409,7 +411,7 @@ class DTraceConsumerThread(Thread):
     Helper Thread which can be used to continuously aggregate.
     '''
 
-    def __init__(self, script, chew_func=None, chewrec_func=None,
+    def __init__(self, script, consume=True, chew_func=None, chewrec_func=None,
                  out_func=None, walk_func=None, sleep=0):
         '''
         Initilizes the Thread.
@@ -417,14 +419,17 @@ class DTraceConsumerThread(Thread):
         Thread.__init__(self)
         self._stop = threading.Event()
         self.sleep_time = sleep
+        self.consume = consume
         self.consumer = DTraceContinuousConsumer(script, chew_func,
                                                  chewrec_func, out_func,
                                                  walk_func)
 
     def __del__(self):
         '''
-        Make sue DTrace stops.
+        Make sure DTrace stops.
         '''
+        if not self.consume:
+            self.consumer.snapshot()
         del(self.consumer)
 
     def run(self):
@@ -440,9 +445,10 @@ class DTraceConsumerThread(Thread):
             else:
                 time.sleep(self.sleep_time)
 
-            status = self.consumer.snapshot()
-            if status == 1:
-                self.stop()
+            if self.consume:
+                status = self.consumer.snapshot()
+                if status == 1:
+                    self.stop()
 
     def stop(self):
         '''
