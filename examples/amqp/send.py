@@ -18,7 +18,7 @@ SCRIPT = 'syscall:::entry { @num[execname] = count(); }'
 
 # Connection to the broker
 connection = pika.BlockingConnection(pika.ConnectionParameters(
-                                          host='localhost'))
+                                     host='localhost'))
 channel = connection.channel()
 channel.queue_declare(queue='dtrace')
 

@@ -15,6 +15,9 @@ SCRIPT = 'sysinfo:::readch { @dist[execname] = quantize(arg0); }'
 
 
 def my_walk(action, identifier, key, values):
+    '''
+    Walk the aggregrate.
+    '''
     print key
     for item in values:
         if item[0][0] > 0 and item[1] > 0:
@@ -30,4 +33,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

@@ -7,12 +7,13 @@ Created on Mar 31, 2012
 
 @author: tmetsch
 '''
+
 import ast
 import pika
 
 # Connection to the broker.
 connection = pika.BlockingConnection(pika.ConnectionParameters(
-                                          host='localhost'))
+                                     host='localhost'))
 channel = connection.channel()
 channel.queue_declare(queue='dtrace')
 

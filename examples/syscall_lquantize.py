@@ -14,6 +14,9 @@ SCRIPT = 'syscall::read:entry { @dist[execname] = lquantize(arg0, 0, 12, 2); }'
 
 
 def my_walk(action, identifier, key, values):
+    '''
+    Walk the aggregate.
+    '''
     print key
     for item in values:
         if item[0][0] > 0:
@@ -29,4 +32,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
