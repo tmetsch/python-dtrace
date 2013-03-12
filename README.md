@@ -1,4 +1,3 @@
-
 Python as a DTrace consumer
 ===========================
 
@@ -101,3 +100,4 @@ The examples for using this libdtrace wrapper can be found in the
 *examples/ctypes* folder.
 
 (c) 2011-2012 Thijs Metsch
+(c) 2013 engjoy UG (haftungsbeschraenkt)
