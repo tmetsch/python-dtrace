@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
-'''
+"""
 Use the Python DTrace consumer as a Thread and run a syscall counter DTrace
 script.
 
 Created on Oct 10, 2011
 
 @author: tmetsch
-'''
+"""
 
 from dtrace import DTraceConsumerThread
 import time
@@ -16,9 +16,9 @@ SCRIPT = 'syscall:::entry { @num[execname] = count(); }'
 
 
 def main():
-    '''
+    """
     Run DTrace...
-    '''
+    """
     thr = DTraceConsumerThread(SCRIPT)
     thr.start()
 

@@ -1,22 +1,22 @@
 #!/usr/bin/env python
 
-'''
+"""
 A CLI for Dtrace which acts almost like the normal dtrace command on your
 shell.
 
 Created on Apr 11, 2012
 
 @author: tmetsch
-'''
+"""
 
 from dtrace import DTraceConsumerThread
 import sys
 
 
 def print_lquantize(values):
-    '''
+    """
     Print a lquantize.
-    '''
+    """
     # find max
     maxi = 0
     for item in values:
@@ -34,9 +34,9 @@ def print_lquantize(values):
 
 
 def pretty_print(iden, action, keys, values):
-    '''
+    """
     Pretty print aggregation walker.
-    '''
+    """
     if action in [1799]:
         print keys, values
     elif action == 1800:
@@ -50,16 +50,16 @@ def pretty_print(iden, action, keys, values):
 
 
 def brendan():
-    '''
+    """
     DTrace fans will understand this :-D
-    '''
+    """
     print 'Tracing... Hit Ctrl-C to end'
 
 
 def run_dtrace(script):
-    '''
+    """
     Run DTrace till Ctrl+C is pressed...
-    '''
+    """
     thr = DTraceConsumerThread(script, False, walk_func=pretty_print)
     thr.start()
     brendan()

@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-'''
+"""
 Use the Python DTrace consumer and count syscalls by zone.
 
 Created on Oct 10, 2011
 
 @author: tmetsch
-'''
+"""
 
 
 from ctypes import cast, c_char_p, c_int
@@ -17,9 +17,9 @@ SCRIPT = 'syscall:::entry { @num[zonename] = count(); }'
 
 
 def walk(data, arg):
-    '''
+    """
     Nice formatted aggregate walker.
-    '''
+    """
     tmp = data.contents.dtada_data
 
     name = cast(tmp + 16, c_char_p).value
@@ -31,9 +31,9 @@ def walk(data, arg):
 
 
 def main():
-    '''
+    """
     Run DTrace...
-    '''
+    """
     dtrace = DTraceConsumerThread(SCRIPT, walk_func=walk)
     dtrace.start()
 

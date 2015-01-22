@@ -1,10 +1,10 @@
-'''
+"""
 The implementation of the consumer.
 
 Created on Oct 10, 2011
 
 @author: tmetsch
-'''
+"""
 
 from ctypes import cdll, CDLL, byref, c_int, c_char_p, CFUNCTYPE, c_void_p, \
     POINTER, cast
@@ -18,9 +18,9 @@ cdll.LoadLibrary("libdtrace.so")
 
 LIBRARY = CDLL("libdtrace.so")
 
-#==============================================================================
+# =============================================================================
 # chewing and output walkers
-#==============================================================================
+# =============================================================================
 
 
 CHEW_FUNC = CFUNCTYPE(c_int,
@@ -39,35 +39,35 @@ WALK_FUNC = CFUNCTYPE(c_int,
 
 
 def simple_chew_func(data, arg):
-    '''
+    """
     Callback for chew.
-    '''
+    """
     print 'CPU :', c_int(data.contents.dtpda_cpu).value
     return 0
 
 
 def simple_chewrec_func(data, rec, arg):
-    '''
+    """
     Callback for record chewing.
-    '''
-    if rec == None:
+    """
+    if rec is None:
         return 1
     return 0
 
 
 def simple_buffered_out_writer(bufdata, arg):
-    '''
+    """
     In case dtrace_work is given None as filename - this one is called.
-    '''
+    """
     tmp = c_char_p(bufdata.contents.dtbda_buffered).value.strip()
     print 'out >', tmp
     return 0
 
 
 def simple_walk(data, arg):
-    '''
+    """
     Aggregate walker capable of reading a name and one value.
-    '''
+    """
 
     # TODO: pickup the 16 and 272 from offset in desc...
 
@@ -79,42 +79,43 @@ def simple_walk(data, arg):
 
     return 0
 
-#==============================================================================
+# =============================================================================
 # Convenience stuff
-#==============================================================================
+# =============================================================================
 
 
 def deref(addr, typ):
-    '''
+    """
     Deref a pointer.
-    '''
+    """
     return cast(addr, POINTER(typ)).contents
 
 
 def get_error_msg(handle):
-    '''
+    """
     Get the latest and greatest DTrace error.
-    '''
+    """
     txt = LIBRARY.dtrace_errmsg(handle, LIBRARY.dtrace_errno(handle))
     return c_char_p(txt).value
 
-#==============================================================================
+# =============================================================================
 # Consumers
-#==============================================================================
+# =============================================================================
 
 
 class DTraceConsumer(object):
-    '''
+    """
     A Pyton based DTrace consumer.
-    '''
+    """
 
-    def __init__(self, chew_func=None,
-                       chew_rec_func=None,
-                       walk_func=None,
-                       out_func=None):
-        '''
+    def __init__(self,
+                 chew_func=None,
+                 chew_rec_func=None,
+                 walk_func=None,
+                 out_func=None):
+        """
         Constructor. will get the DTrace handle
-        '''
+        """
         if chew_func is not None:
             self.chew = CHEW_FUNC(chew_func)
         else:
@@ -137,7 +138,7 @@ class DTraceConsumer(object):
 
         # get dtrace handle
         self.handle = LIBRARY.dtrace_open(3, 0, byref(c_int(0)))
-        if self.handle == None:
+        if self.handle is None:
             raise Exception('Unable to get a DTrace handle.')
 
         # set buffer options
@@ -148,13 +149,13 @@ class DTraceConsumer(object):
             raise Exception(get_error_msg(self.handle))
 
     def __del__(self):
-        '''
+        """
         Always close the DTrace handle :-)
-        '''
+        """
         LIBRARY.dtrace_close(self.handle)
 
     def run_script(self, script, runtime=1):
-        '''
+        """
         Run a DTrace script for a number of seconds defined by the runtime.
 
         After the run is complete the aggregate is walked. During execution the
@@ -163,7 +164,7 @@ class DTraceConsumer(object):
 
         script -- The script to run.
         runtime -- The time the script should run in second (Default: 1s).
-        '''
+        """
         # set simple output callbacks
         if LIBRARY.dtrace_handle_buffered(self.handle, self.buf_out,
                                           None) == -1:
@@ -171,8 +172,8 @@ class DTraceConsumer(object):
 
         # compile
         prg = LIBRARY.dtrace_program_strcompile(self.handle,
-                                                     script, 3, 4, 0, None)
-        if prg == None:
+                                                script, 3, 4, 0, None)
+        if prg is None:
             raise Exception('Unable to compile the script: ',
                             get_error_msg(self.handle))
 
@@ -209,14 +210,15 @@ class DTraceConsumerThread(Thread):
     regularly for the stopped() condition.
     """
 
-    def __init__(self, script,
-                       chew_func=None,
-                       chew_rec_func=None,
-                       walk_func=None,
-                       out_func=None):
-        '''
+    def __init__(self,
+                 script,
+                 chew_func=None,
+                 chew_rec_func=None,
+                 walk_func=None,
+                 out_func=None):
+        """
         Constructor. will get the DTrace handle
-        '''
+        """
         super(DTraceConsumerThread, self).__init__()
         self._stop = threading.Event()
         self.script = script
@@ -243,7 +245,7 @@ class DTraceConsumerThread(Thread):
 
         # get dtrace handle
         self.handle = LIBRARY.dtrace_open(3, 0, byref(c_int(0)))
-        if self.handle == None:
+        if self.handle is None:
             raise Exception('Unable to get a DTrace handle.')
 
         # set buffer options
@@ -262,9 +264,9 @@ class DTraceConsumerThread(Thread):
 
         # compile
         prg = LIBRARY.dtrace_program_strcompile(self.handle,
-                                                     self.script, 3, 4, 0,
-                                                     None)
-        if prg == None:
+                                                self.script, 3, 4, 0,
+                                                None)
+        if prg is None:
             raise Exception('Unable to compile the script: ',
                             get_error_msg(self.handle))
 
@@ -293,13 +295,13 @@ class DTraceConsumerThread(Thread):
         LIBRARY.dtrace_stop(self.handle)
 
     def stop(self):
-        '''
+        """
         Stop DTrace.
-        '''
+        """
         self._stop.set()
 
     def stopped(self):
-        '''
+        """
         Used to check the status.
-        '''
+        """
         return self._stop.isSet()

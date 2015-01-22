@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
-'''
+"""
 Use the Python DTrace consumer and push the data through AMQP as the DTrace
 probes fire.
 
 Created on Mar 31, 2012
 
 @author: tmetsch
-'''
+"""
 
 import dtrace
 import pika
@@ -23,18 +23,18 @@ channel = connection.channel()
 channel.queue_declare(queue='dtrace')
 
 
-def walk(id, key, value):
-    '''
+def walk(iden, key, value):
+    """
     Walker which sends on the data to RabbitMQ as the DTrace probes fire.
-    '''
+    """
     channel.basic_publish(exchange='', routing_key='dtrace',
                           body=str({key[0]: value}))
 
 
 def run_dtrace():
-    '''
+    """
     Runs a DTrace script for 5 seconds...
-    '''
+    """
     thr = dtrace.DTraceConsumerThread(SCRIPT, walk_func=walk)
     thr.start()
 
