@@ -68,7 +68,6 @@ def simple_walk(data, arg):
     """
     Aggregate walker capable of reading a name and one value.
     """
-
     # TODO: pickup the 16 and 272 from offset in desc...
 
     tmp = data.contents.dtada_data
@@ -198,10 +197,17 @@ class DTraceConsumer(object):
         LIBRARY.dtrace_stop(self.handle)
 
         # sorting instead of dtrace_aggregate_walk
-        if LIBRARY.dtrace_aggregate_walk_valsorted(self.handle, self.walk,
-                                                   None) != 0:
-            raise Exception('Failed to walk the aggregate: ',
-                            get_error_msg(self.handle))
+
+        #if dtrace_aggregate_walk_valsorted(self.handle,
+        #                                   & walk,
+        #                                   <void *>self.walk_func) != 0:
+        import ctypes
+        print LIBRARY.dtrace_aggregate_walk_valsorted(self.handle, self.walk, None)
+        #if LIBRARY.dtrace_aggregate_walk_valsorted(self.handle,
+        #                                           self.walk,
+        #                                           c_void_p()) != 0:
+        #    raise Exception('Failed to walk the aggregate: ',
+        #                    get_error_msg(self.handle))
 
 
 class DTraceConsumerThread(Thread):

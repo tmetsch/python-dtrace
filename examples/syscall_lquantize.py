@@ -28,7 +28,7 @@ def main():
     Run DTrace...
     """
     consumer = DTraceConsumer(walk_func=my_walk)
-    consumer.run_script(SCRIPT, 5)
+    consumer.run(SCRIPT, 5)
 
 if __name__ == '__main__':
     main()

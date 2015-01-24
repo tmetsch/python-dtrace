@@ -14,8 +14,8 @@ try:
     from Cython.Distutils import build_ext
 
     BUILD_EXTENSION = {'build_ext': build_ext}
-    EXT_MODULES = [Extension("dtrace", ["dtrace/dtrace_h.pxd",
-                                        "dtrace/dtrace.pyx"],
+    EXT_MODULES = [Extension("dtrace", ["dtrace_consumer/dtrace_h.pxd",
+                                        "dtrace_consumer/consumer.pyx"],
                              libraries=["dtrace"])]
 
 except ImportError:
@@ -27,7 +27,7 @@ except ImportError:
 
 
 setup(name='python-dtrace',
-      version='0.0.9',
+      version='0.0.8',
       description='DTrace consumer for Python based on libdtrace. Use Python'
                   + ' as DTrace Consumer and Provider! See the homepage for'
                   + ' more information.',

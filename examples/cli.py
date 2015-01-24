@@ -71,8 +71,8 @@ def run_dtrace(script):
         thr.join()
 
 if __name__ == '__main__':
-    #run_dtrace('dtrace:::BEGIN {trace("Hello World"); exit(0);}')
-    #run_dtrace('syscall:::entry { @num[pid,execname] = count(); }')
+    # run_dtrace('dtrace:::BEGIN {trace("Hello World"); exit(0);}')
+    # run_dtrace('syscall:::entry { @num[pid,execname] = count(); }')
     TMP = 'syscall::read:entry { @dist[execname] = lquantize(arg0, 0, 12, 2);}'
     run_dtrace(TMP)
-    #run_dtrace('sysinfo:::readch { @dist[execname] = quantize(arg0); }')
+    # run_dtrace('sysinfo:::readch { @dist[execname] = quantize(arg0); }')

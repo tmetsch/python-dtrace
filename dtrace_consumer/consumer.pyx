@@ -2,7 +2,7 @@
 import time
 import threading
 from threading import Thread
-from dtrace.dtrace_h cimport *
+from dtrace_consumer.dtrace_h cimport *
 
 # ----------------------------------------------------------------------------
 # The DTrace callbacks
@@ -261,7 +261,7 @@ cdef class DTraceConsumer:
         """
         dtrace_close(self.handle)
 
-    cpdef compile_script(self, char * script):
+    cpdef compile(self, char * script):
         """
         Compile a DTrace script and return errors if any.
         
@@ -275,7 +275,7 @@ cdef class DTraceConsumer:
                             dtrace_errmsg(self.handle,
                                           dtrace_errno(self.handle)))
 
-    cpdef run_script(self, char * script, runtime=1):
+    cpdef run(self, char * script, runtime=1):
         """
         Run a DTrace script for a number of seconds defined by the runtime.
 

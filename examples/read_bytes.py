@@ -20,7 +20,7 @@ def main():
     print 'Hint: if you don\'t get any output try running it with pfexec...'
 
     consumer = DTraceConsumer()
-    consumer.run_script(SCRIPT, 4)
+    consumer.run(SCRIPT, 4)
 
 if __name__ == '__main__':
     main()
