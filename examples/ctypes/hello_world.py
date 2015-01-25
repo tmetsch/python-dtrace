@@ -18,7 +18,7 @@ def main():
     Run DTrace...
     """
     consumer = DTraceConsumer()
-    consumer.run_script(SCRIPT)
+    consumer.run(SCRIPT)
 
 if __name__ == '__main__':
     main()

@@ -6,9 +6,11 @@ __author__ = 'tmetsch'
 
 from dtrace_ctypes import consumer
 
+from ctypes import c_char_p
+
 import unittest
 
-SCRIPT = 'syscall:::entry { @num[pid,execname] = count(); }'
+SCRIPT = 'dtrace:::BEGIN {trace("Hello World");}'
 
 
 class TestDTraceConsumer(unittest.TestCase):
@@ -18,14 +20,15 @@ class TestDTraceConsumer(unittest.TestCase):
 
     def setUp(self):
         self.out = ''
-        self.consumer = consumer.DTraceConsumer(out_func=self._get_output, walk_func=self._test)
+        self.consumer = consumer.DTraceConsumer(out_func=self._get_output)
 
-    def test_compile_for_success(self):
-        self.consumer.run_script(SCRIPT)
+    def test_run_for_success(self):
+        self.consumer.run(SCRIPT)
 
-    def _test(self, tmp, foo):
-        print tmp
+    def test_run_for_sanity(self):
+        self.consumer.run(SCRIPT)
+        self.assertEquals(self.out, 'Hello World')
 
-    def _get_output(self, value):
-        self.out = value
-
+    def _get_output(self, data, arg):
+        tmp = c_char_p(data.contents.dtbda_buffered).value.strip()
+        self.out = tmp

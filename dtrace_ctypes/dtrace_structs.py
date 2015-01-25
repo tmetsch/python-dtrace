@@ -40,7 +40,11 @@ class dtrace_aggdata(Structure):
                 ("dtada_size", c_int),
                 ("dtada_delta", c_void_p),
                 ("dtada_percpu", c_void_p),
-                ("dtada_percpu_delta", c_void_p)]
+                ("dtada_percpu_delta", c_void_p),
+                ("dtada_total", c_void_p),
+                ("dtada_minbin", c_void_p),
+                ("dtada_maxbin", c_void_p),
+                ("dtada_flags", c_void_p)]
 
 
 class dtrace_bufdata(Structure):

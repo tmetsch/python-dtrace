@@ -42,7 +42,7 @@ def simple_chew_func(data, arg):
     """
     Callback for chew.
     """
-    print 'CPU :', c_int(data.contents.dtpda_cpu).value
+    print('CPU :', c_int(data.contents.dtpda_cpu).value)
     return 0
 
 
@@ -60,7 +60,7 @@ def simple_buffered_out_writer(bufdata, arg):
     In case dtrace_work is given None as filename - this one is called.
     """
     tmp = c_char_p(bufdata.contents.dtbda_buffered).value.strip()
-    print 'out >', tmp
+    print('out >', tmp)
     return 0
 
 
@@ -153,7 +153,7 @@ class DTraceConsumer(object):
         """
         LIBRARY.dtrace_close(self.handle)
 
-    def run_script(self, script, runtime=1):
+    def run(self, script, runtime=1):
         """
         Run a DTrace script for a number of seconds defined by the runtime.
 
@@ -198,16 +198,11 @@ class DTraceConsumer(object):
 
         # sorting instead of dtrace_aggregate_walk
 
-        #if dtrace_aggregate_walk_valsorted(self.handle,
-        #                                   & walk,
-        #                                   <void *>self.walk_func) != 0:
-        import ctypes
-        print LIBRARY.dtrace_aggregate_walk_valsorted(self.handle, self.walk, None)
-        #if LIBRARY.dtrace_aggregate_walk_valsorted(self.handle,
-        #                                           self.walk,
-        #                                           c_void_p()) != 0:
-        #    raise Exception('Failed to walk the aggregate: ',
-        #                    get_error_msg(self.handle))
+        if LIBRARY.dtrace_aggregate_walk_valsorted(self.handle,
+                                                   self.walk,
+                                                   None) != 0:
+            raise Exception('Failed to walk the aggregate: ',
+                            get_error_msg(self.handle))
 
 
 class DTraceConsumerThread(Thread):
