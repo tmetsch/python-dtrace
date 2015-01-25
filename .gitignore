@@ -10,3 +10,4 @@ out.txt
 *.pyc
 dtrace/dtrace.c
 .tox
+.idea/

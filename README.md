@@ -99,5 +99,5 @@ functions are named: **simple_chew**, **simple_chewrec**, **simple_walk** and
 The examples for using this libdtrace wrapper can be found in the
 *examples/ctypes* folder.
 
-(c) 2011-2012 Thijs Metsch
+(c) 2011-2015 Thijs Metsch
 (c) 2013 engjoy UG (haftungsbeschraenkt)

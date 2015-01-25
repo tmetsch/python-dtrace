@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-'''
+"""
 Receives up to date data from the DTrace consumer.
 
 Created on Mar 31, 2012
 
 @author: tmetsch
-'''
+"""
 
 import ast
 import pika
@@ -22,9 +22,9 @@ data = {}
 
 
 def callback(ch, method, properties, body):
-    '''
+    """
     Callback which picks up the DTrace messages.
-    '''
+    """
     tmp = ast.literal_eval(body)
     key = tmp.keys()[0]
     val = tmp.values()[0]

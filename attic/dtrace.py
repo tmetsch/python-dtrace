@@ -1,33 +1,28 @@
 #!/usr/bin/env python2.7
 
-'''
+"""
 Simple Python based DTrace consumers which executes a Hello World D script
 using libdtrace and ctypes to access it.
-'''
+"""
 from ctypes import cdll, CDLL, Structure, c_void_p, c_char_p, c_uint, c_int, \
-c_char, CFUNCTYPE, POINTER, byref, cast
+    c_char, CFUNCTYPE, POINTER, byref, cast
 import time
 
 SCRIPT_COUNT = 'dtrace:::BEGIN {trace("Hello World");} \
                 syscall:::entry { @num[execname] = count(); }'
 
-##class dtrace_recdesc(Structure):
-##    '''
-##    '''
-##    _fields_ = [("dtrd_offset", c_uint)]
-
 
 class dtrace_aggdesc(Structure):
-    '''
+    """
     TODO - use offset
-    '''
+    """
     _fields_ = [("dtagd_flags", c_int)]
 
 
 class dtrace_aggdata(Structure):
-    '''
+    """
     As defined in dtrace.h:351
-    '''
+    """
     _fields_ = [("dtada_handle", c_void_p),
                 ("dtada_desc", dtrace_aggdesc),
                 ("dtada_edesc", c_void_p),
@@ -41,11 +36,11 @@ class dtrace_aggdata(Structure):
 
 
 class dtrace_bufdata(Structure):
-    '''
+    """
     As defined in dtrace.h:310
-    '''
+    """
     _fields_ = [("dtbda_handle", c_void_p),
-                ("dtbda_buffered", c_char_p), # works
+                ("dtbda_buffered", c_char_p),  # works
                 ("dtbda_probe", c_void_p),
                 ("dtbda_recdesc", c_void_p),
                 ("dtbda_aggdata", c_void_p),
@@ -53,9 +48,9 @@ class dtrace_bufdata(Structure):
 
 
 class dtrace_probedesc(Structure):
-    '''
+    """
     As defined in sys/dtrace.h:884
-    '''
+    """
     _fields_ = [("dtrace_id_t", c_uint),
                 ("dtpd_provider", c_char),
                 ("dtpd_mod", c_char),
@@ -64,30 +59,30 @@ class dtrace_probedesc(Structure):
 
 
 class dtrace_probedata(Structure):
-    '''
+    """
     As defined in dtrace.h:186
-    '''
+    """
     _fields_ = [("dtpda_handle", c_void_p),
-               ("dtpda_edesc", c_void_p),
-               ("dtpda_pdesc", dtrace_probedesc),
-               ("dtpda_cpu", c_int), # works
-               ("dtpda_data", c_void_p),
-               ("dtpda_flow", c_void_p),
-               ("dtpda_prefix", c_void_p),
-               ("dtpda_indent", c_int)]
+                ("dtpda_edesc", c_void_p),
+                ("dtpda_pdesc", dtrace_probedesc),
+                ("dtpda_cpu", c_int),  # works
+                ("dtpda_data", c_void_p),
+                ("dtpda_flow", c_void_p),
+                ("dtpda_prefix", c_void_p),
+                ("dtpda_indent", c_int)]
 
 
 class dtrace_recdesc(Structure):
-    '''
+    """
     As defined in sys/dtrace.h:931
-    '''
+    """
     pass
 
 
 def deref(addr, typ):
-    '''
+    """
     Deref a pointer.
-    '''
+    """
     return cast(addr, POINTER(typ)).contents
 
 CHEW_FUNC = CFUNCTYPE(c_int,
@@ -110,35 +105,35 @@ LIBRARY = CDLL("libdtrace.so")
 
 
 def chew_func(data, arg):
-    '''
+    """
     Callback for chew.
-    '''
+    """
     print '+--> In chew: cpu :', c_int(data.contents.dtpda_cpu).value
     return 0
 
 
 def chewrec_func(data, rec, arg):
-    '''
+    """
     Callback for record chewing.
-    '''
-    if rec == None:
+    """
+    if rec is None:
         return 1
     return 0
 
 
 def buffered_stdout_writer(bufdata, arg):
-    '''
+    """
     In case dtrace_work is given None as filename - this one is called.
-    '''
+    """
     tmp = c_char_p(bufdata.contents.dtbda_buffered).value.strip()
     print '  +--> In buffered_stdout_writer: ', tmp
     return 0
 
 
 def walk(data, arg):
-    '''
+    """
     Aggregate walker.
-    '''
+    """
 
     # TODO: pickup the 16 and 272 from offset in desc...
 
@@ -152,9 +147,9 @@ def walk(data, arg):
 
 
 def run_dtrace():
-    '''
+    """
     Go for it...
-    '''
+    """
     # get dtrace handle
     handle = LIBRARY.dtrace_open(3, 0, byref(c_int(0)))
 
