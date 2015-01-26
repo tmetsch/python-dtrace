@@ -5,7 +5,7 @@ This is a first shot into looking at getting something up and running like
 https://github.com/bcantrill/node-libdtrace for Python.
 
 Note: This is far from ready - documentation on writing own DTrace consumers
-is very rare :-
+is very rare :-/
 
 The codes in the **examples** folder should give an overview of how to use
 Python as a DTrace consumer.
@@ -25,7 +25,7 @@ Initializing the Python based DTrace consumer is as simple as:
 
     from dtrace import DTraceConsumer
     consumer = DTraceConsumer(walk_func=my_walk [...])
-    consumer.run_script(SCRIPT, runtime=3)
+    consumer.run(SCRIPT, runtime=3)
 
 The simple DTraceConsumer can be initialized with self written callbacks which
 will allow you to get the output from DTrace, the chewing of the probes as well
