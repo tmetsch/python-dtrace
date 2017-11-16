@@ -256,6 +256,12 @@ class DTraceConsumerThread(Thread):
         if LIBRARY.dtrace_setopt(self.handle, 'aggsize', '4m') != 0:
             raise Exception(get_error_msg(self.handle))
 
+    def __del__(self):
+        """
+        Always close the DTrace handle :-)
+        """
+        LIBRARY.dtrace_close(self.handle)
+
     def run(self):
         Thread.run(self)
         # set simple output callbacks
