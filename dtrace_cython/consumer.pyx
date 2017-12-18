@@ -2,7 +2,7 @@
 import time
 import threading
 from threading import Thread
-from dtrace_consumer.dtrace_h cimport *
+from dtrace_cython.dtrace_h cimport *
 
 # ----------------------------------------------------------------------------
 # The DTrace callbacks
@@ -242,7 +242,9 @@ cdef class DTraceConsumer:
         self.walk_func = walk_func or simple_walk
 
         cdef int err
-        self.handle = dtrace_open(3, 0, &err)
+        if not hasattr(self, 'handle'):
+            # ensure we only grab 1 - cython might call init twice, of more.
+            self.handle = dtrace_open(3, 0, &err)
         if self.handle == NULL:
             raise Exception(dtrace_errmsg(NULL, err))
 
@@ -255,11 +257,12 @@ cdef class DTraceConsumer:
             raise Exception(dtrace_errmsg(self.handle,
                                           dtrace_errno(self.handle)))
 
-    def __del__(self):
+    def __delalloc__(self):
         """
         Release DTrace handle.
         """
-        dtrace_close(self.handle)
+        if self.handle != NULL:
+            dtrace_close(self.handle)
 
     cpdef compile(self, char * script):
         """
@@ -358,7 +361,9 @@ cdef class DTraceContinuousConsumer:
         self.script = script
 
         cdef int err
-        self.handle = dtrace_open(3, 0, &err)
+        if not hasattr(self, 'handle'):
+            # ensure we only grab 1 - cython might call init twice, of more.
+            self.handle = dtrace_open(3, 0, &err)
         if self.handle == NULL:
             raise Exception(dtrace_errmsg(NULL, err))
 
@@ -371,12 +376,13 @@ cdef class DTraceContinuousConsumer:
             raise Exception(dtrace_errmsg(self.handle,
                                           dtrace_errno(self.handle)))
 
-    def __del__(self):
+    def __delalloc__(self):
         """
         Release DTrace handle.
         """
-        dtrace_stop(self.handle)
-        dtrace_close(self.handle)
+        if self.handle != NULL:
+            dtrace_stop(self.handle)
+            dtrace_close(self.handle)
 
     cpdef go(self):
         """
