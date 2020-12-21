@@ -56,7 +56,7 @@ be provided as parameter just like the script. During the DTrace chew, chewrec
 and the out callbacks are called. When the run is finished the aggregation will
 be walked - Thus you can aggregate for 3 seconds and than see the results.
 
-There also exists and DTraceConsumerThread which can be used to continuously
+There also exists a DTraceConsumerThread which can be used to continuously
 run DTrace in the background. This might come in handy when you want to
 continuously aggregate data for e.g. an GUI. The chew, chewrec, out and walk
 callbacks are now called as the snapshot function of DTrace is called.
