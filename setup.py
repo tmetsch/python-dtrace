@@ -10,6 +10,7 @@ Created on Oct 10, 2011
 
 from distutils.core import setup
 from distutils.extension import Extension
+import sys
 try:
     from Cython.Build import build_ext, cythonize
 
@@ -17,7 +18,7 @@ try:
     EXT_MODULES = cythonize([Extension("dtrace", ["dtrace_cython/dtrace_h.pxd",
                                                   "dtrace_cython/consumer.pyx"],
                              libraries=["dtrace"])],
-        language_level=2)
+        language_level=sys.version_info.major)
 
 except ImportError:
     BUILD_EXTENSION = {}
