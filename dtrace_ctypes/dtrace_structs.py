@@ -10,8 +10,18 @@ Created on Oct 10, 2011
 # disabling 'Invalid name' pylint check (C0103)
 # pylint: disable=R0903,C0103
 
-from ctypes import Structure, c_int, c_void_p, c_char_p, c_char, c_uint
+from ctypes import Structure, c_int, c_void_p, c_char_p, c_char, c_uint, POINTER
 
+class dtrace_hdl(Structure):
+    pass
+
+
+class dtrace_prog(Structure):
+    pass
+
+
+dtrace_hdl_t = POINTER(dtrace_hdl)
+dtrace_prog_t = POINTER(dtrace_prog)
 
 class dtrace_recdesc(Structure):
     """

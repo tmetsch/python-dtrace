@@ -5,24 +5,22 @@ Created on Oct 10, 2011
 
 @author: tmetsch
 """
-
-from ctypes import cdll, CDLL, byref, c_int, c_char_p, CFUNCTYPE, c_void_p, \
-    POINTER, cast
-from dtrace_ctypes.dtrace_structs import dtrace_bufdata, dtrace_probedata, \
-    dtrace_aggdata, dtrace_recdesc
-from threading import Thread
 import platform
 import threading
 import time
+from ctypes import (byref, c_char_p, c_int, c_uint, c_void_p, cast, cdll,
+                    CFUNCTYPE, POINTER)
+from threading import Thread
+
+from dtrace_ctypes.dtrace_structs import (dtrace_aggdata, dtrace_bufdata,
+                                          dtrace_hdl_t, dtrace_probedata,
+                                          dtrace_prog_t, dtrace_recdesc)
 
 if platform.system().startswith("Darwin"):
     _LIBNAME = "libdtrace.dylib"
 else:
     _LIBNAME = "libdtrace.so"
-
-cdll.LoadLibrary(_LIBNAME)
-
-LIBRARY = CDLL(_LIBNAME)
+_LIBRARY = cdll.LoadLibrary(_LIBNAME)
 
 # =============================================================================
 # chewing and output walkers
@@ -83,6 +81,61 @@ def simple_walk(data, arg):
     print '{0:60s} :{1:10d}'.format(name, instance)
 
     return 0
+
+# =============================================================================
+# LibDTrace function wrapper class
+# =============================================================================
+
+
+def _get_dtrace_fn(name, restype, argtypes):
+    fn = getattr(_LIBRARY, name)
+    fn.restype = restype
+    fn.argtypes = argtypes
+    return fn
+
+
+class LIBRARY(object):
+    # Types
+    dtrace_proginfo_t = c_void_p
+    dtrace_probespec_t = c_int  # actually an enum
+    dtrace_workstatus_t = c_int  # actually an enum
+    FILE_p = c_void_p  # FILE*
+    # Functions
+    dtrace_open = _get_dtrace_fn(
+        "dtrace_open", dtrace_hdl_t, [c_int, c_int, POINTER(c_int)])
+    dtrace_close = _get_dtrace_fn(
+        "dtrace_close", None, [dtrace_hdl_t])
+    dtrace_go = _get_dtrace_fn("dtrace_go", c_int, [dtrace_hdl_t])
+    dtrace_stop = _get_dtrace_fn("dtrace_stop", c_int, [dtrace_hdl_t])
+    dtrace_sleep = _get_dtrace_fn("dtrace_sleep", None, [dtrace_hdl_t])
+    dtrace_work = _get_dtrace_fn(
+        "dtrace_work", dtrace_workstatus_t,
+        [dtrace_hdl_t, FILE_p, CHEW_FUNC, CHEWREC_FUNC, c_void_p])
+    dtrace_errno = _get_dtrace_fn(
+        "dtrace_errno", c_int, [dtrace_hdl_t])
+    dtrace_errmsg = _get_dtrace_fn(
+        "dtrace_errmsg", c_char_p, [dtrace_hdl_t, c_int])
+    dtrace_setopt = _get_dtrace_fn(
+        "dtrace_setopt", c_int, [dtrace_hdl_t, c_char_p, c_char_p])
+    dtrace_handle_buffered = _get_dtrace_fn(
+        "dtrace_handle_buffered", c_int,
+        [dtrace_hdl_t, BUFFERED_FUNC, c_void_p])
+    dtrace_aggregate_walk = _get_dtrace_fn(
+        "dtrace_aggregate_walk", c_int,
+        [dtrace_hdl_t, WALK_FUNC, c_void_p])
+    dtrace_aggregate_walk_valsorted = _get_dtrace_fn(
+        "dtrace_aggregate_walk_valsorted", c_int,
+        [dtrace_hdl_t, WALK_FUNC, c_void_p])
+    dtrace_aggregate_snap = _get_dtrace_fn(
+        "dtrace_aggregate_snap", c_int, [dtrace_hdl_t])
+    dtrace_program_strcompile = _get_dtrace_fn(
+        "dtrace_program_strcompile", dtrace_prog_t,
+        [dtrace_hdl_t, c_char_p, dtrace_probespec_t, c_uint, c_int,
+         POINTER(c_char_p)])
+    dtrace_program_exec = _get_dtrace_fn(
+        "dtrace_program_exec", c_int,
+        [dtrace_hdl_t, dtrace_prog_t, dtrace_proginfo_t])
+
 
 # =============================================================================
 # Convenience stuff
