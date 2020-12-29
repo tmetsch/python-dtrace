@@ -149,23 +149,39 @@ def deref(addr, typ):
     return cast(addr, POINTER(typ)).contents
 
 
-def get_error_msg(handle):
+def get_error_msg(handle, err=None):
     """
     Get the latest and greatest DTrace error.
     """
-    txt = LIBRARY.dtrace_errmsg(handle, LIBRARY.dtrace_errno(handle))
-    return c_char_p(txt).value
+    if err is None:
+        err = LIBRARY.dtrace_errno(handle)
+    txt = LIBRARY.dtrace_errmsg(handle, err)
+    return c_char_p(txt).value.decode("utf-8")
 
 # =============================================================================
 # Consumers
 # =============================================================================
+
+def _dtrace_open():
+    err = c_int(0)
+    handle = LIBRARY.dtrace_open(3, 0, byref(err))
+    if handle is None or handle == 0:
+        raise Exception('Unable to get a DTrace handle. Error=' +
+                        get_error_msg(handle, err))
+    assert isinstance(handle, dtrace_hdl_t)
+    # set buffer options
+    if LIBRARY.dtrace_setopt(handle, b'bufsize', b'4m') != 0:
+        raise Exception(get_error_msg(handle))
+
+    if LIBRARY.dtrace_setopt(handle, b'aggsize', b'4m') != 0:
+        raise Exception(get_error_msg(handle))
+    return handle
 
 
 class DTraceConsumer(object):
     """
     A Pyton based DTrace consumer.
     """
-
     def __init__(self,
                  chew_func=None,
                  chew_rec_func=None,
@@ -195,22 +211,14 @@ class DTraceConsumer(object):
             self.buf_out = BUFFERED_FUNC(simple_buffered_out_writer)
 
         # get dtrace handle
-        self.handle = LIBRARY.dtrace_open(3, 0, byref(c_int(0)))
-        if self.handle is None:
-            raise Exception('Unable to get a DTrace handle.')
-
-        # set buffer options
-        if LIBRARY.dtrace_setopt(self.handle, 'bufsize', '4m') != 0:
-            raise Exception(get_error_msg(self.handle))
-
-        if LIBRARY.dtrace_setopt(self.handle, 'aggsize', '4m') != 0:
-            raise Exception(get_error_msg(self.handle))
+        self.handle = _dtrace_open()
 
     def __del__(self):
         """
         Always close the DTrace handle :-)
         """
-        LIBRARY.dtrace_close(self.handle)
+        if hasattr(self, "handle"):  # Don't close if __init__ failed.
+            LIBRARY.dtrace_close(self.handle)
 
     def run(self, script, runtime=1):
         """
@@ -224,6 +232,7 @@ class DTraceConsumer(object):
         runtime -- The time the script should run in second (Default: 1s).
         """
         # set simple output callbacks
+        assert self.handle is not None
         if LIBRARY.dtrace_handle_buffered(self.handle, self.buf_out,
                                           None) == -1:
             raise Exception('Unable to set the stdout buffered writer.')
@@ -304,25 +313,18 @@ class DTraceConsumerThread(Thread):
             self.buf_out = BUFFERED_FUNC(simple_buffered_out_writer)
 
         # get dtrace handle
-        self.handle = LIBRARY.dtrace_open(3, 0, byref(c_int(0)))
-        if self.handle is None:
-            raise Exception('Unable to get a DTrace handle.')
-
-        # set buffer options
-        if LIBRARY.dtrace_setopt(self.handle, 'bufsize', '4m') != 0:
-            raise Exception(get_error_msg(self.handle))
-
-        if LIBRARY.dtrace_setopt(self.handle, 'aggsize', '4m') != 0:
-            raise Exception(get_error_msg(self.handle))
+        self.handle = _dtrace_open()
 
     def __del__(self):
         """
         Always close the DTrace handle :-)
         """
-        LIBRARY.dtrace_close(self.handle)
+        if hasattr(self, "handle"):  # Don't close if __init__ failed.
+            LIBRARY.dtrace_close(self.handle)
 
     def run(self):
         Thread.run(self)
+        assert self.handle is not None
         # set simple output callbacks
         if LIBRARY.dtrace_handle_buffered(self.handle, self.buf_out,
                                           None) == -1:
