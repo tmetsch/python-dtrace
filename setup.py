@@ -29,6 +29,9 @@ try:
             os.path.join(src_dir,
                          "cddl/contrib/opensolaris/lib/libdtrace/common"),
         ]
+    if os.getenv("ENABLE_ASAN", None) is not None:
+        extra_args["extra_compile_args"] = ["-fsanitize=address"]
+        extra_args["extra_link_args"] = ["-fsanitize=address"]
     BUILD_EXTENSION = {'build_ext': build_ext}
     EXT_MODULES = cythonize(
         [
