@@ -48,7 +48,7 @@ cdef extern from "sys/dtrace.h":
     ctypedef struct dtrace_aggdesc_t:
         # Taken from sys/dtrace.h:950
         int dtagd_nrecs
-        int dtagd_varid
+        int64_t dtagd_varid
         dtrace_recdesc_t dtagd_rec[1]
 
     cdef uint16_t DTRACE_LQUANTIZE_STEP(long x)
