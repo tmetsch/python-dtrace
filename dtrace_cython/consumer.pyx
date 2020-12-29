@@ -1,4 +1,4 @@
-
+from __future__ import print_function, division
 import time
 import threading
 from threading import Thread
@@ -90,7 +90,7 @@ cdef int walk(const dtrace_aggdata_t * data, void * arg) with gil:
         value = (<int *>(data.dtada_data + aggrec.dtrd_offset))[0]
     elif action == DTRACEAGG_AVG:
         tmp = <int64_t *>(data.dtada_data + aggrec.dtrd_offset)
-        value = tmp[1] / tmp[0]
+        value = tmp[1] // tmp[0]
     elif action == DTRACEAGG_QUANTIZE:
         tmp = <int64_t *>(data.dtada_data + aggrec.dtrd_offset)
         ranges = get_quantize_ranges()
@@ -105,7 +105,7 @@ cdef int walk(const dtrace_aggdata_t * data, void * arg) with gil:
         tmp_arg = tmp[0]
 
         ranges = get_lquantize_ranges(tmp_arg)
-        levels = (aggrec.dtrd_size / sizeof (uint64_t)) - 1
+        levels = (aggrec.dtrd_size // sizeof (uint64_t)) - 1
         for i in range(0, levels):
             # i + 1 since tmp[0] is already 'used'
             quantize.append((ranges[i], tmp[i + 1]))
@@ -182,7 +182,7 @@ def simple_chew(cpu):
 
     cpu -- CPU id.
     """
-    print 'Running on CPU:', cpu
+    print('Running on CPU:', cpu)
 
 
 def simple_chewrec(action):
@@ -191,7 +191,7 @@ def simple_chewrec(action):
 
     action -- id of the action which was called.
     """
-    print 'Called action was:', action
+    print('Called action was:', action)
 
 
 def simple_out(value):
@@ -200,7 +200,7 @@ def simple_out(value):
 
     value -- Line by line string of the DTrace output.
     """
-    print 'Value is:', value
+    print('Value is:', value)
 
 
 def simple_walk(action, identifier, keys, value):
@@ -213,7 +213,7 @@ def simple_walk(action, identifier, keys, value):
     keys -- list of keys.
     value -- the value.
     """
-    print action, identifier, keys, value
+    print(action, identifier, keys, value)
 
 # ----------------------------------------------------------------------------
 # The consumers
