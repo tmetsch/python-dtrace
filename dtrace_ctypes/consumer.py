@@ -30,17 +30,17 @@ _LIBRARY = cdll.LoadLibrary(_LIBNAME)
 
 CHEW_FUNC = CFUNCTYPE(c_int,
                       POINTER(dtrace_probedata),
-                      POINTER(c_void_p))
+                      c_void_p)
 CHEWREC_FUNC = CFUNCTYPE(c_int,
                          POINTER(dtrace_probedata),
                          POINTER(dtrace_recdesc),
-                         POINTER(c_void_p))
+                         c_void_p)
 BUFFERED_FUNC = CFUNCTYPE(c_int,
                           POINTER(dtrace_bufdata),
-                          POINTER(c_void_p))
+                          c_void_p)
 WALK_FUNC = CFUNCTYPE(c_int,
                       POINTER(dtrace_aggdata),
-                      POINTER(c_void_p))
+                      c_void_p)
 
 
 def simple_chew_func(data, arg):
