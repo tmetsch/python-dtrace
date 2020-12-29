@@ -92,3 +92,7 @@ class dtrace_probedata(Structure):
                 ("dtpda_flow", c_void_p),
                 ("dtpda_prefix", c_void_p),
                 ("dtpda_indent", c_int)]
+
+DTRACE_WORKSTATUS_ERROR = -1
+DTRACE_WORKSTATUS_OKAY = 0
+DTRACE_WORKSTATUS_DONE = 1

@@ -15,7 +15,10 @@ from threading import Thread
 
 from dtrace_ctypes.dtrace_structs import (dtrace_aggdata, dtrace_bufdata,
                                           dtrace_hdl_t, dtrace_probedata,
-                                          dtrace_prog_t, dtrace_recdesc)
+                                          dtrace_prog_t, dtrace_recdesc,
+                                          DTRACE_WORKSTATUS_OKAY,
+                                          DTRACE_WORKSTATUS_DONE,
+                                          DTRACE_WORKSTATUS_ERROR)
 
 if platform.system().startswith("Darwin"):
     _LIBNAME = "libdtrace.dylib"
@@ -257,9 +260,14 @@ class DTraceConsumer(object):
         i = 0
         while i < runtime:
             LIBRARY.dtrace_sleep(self.handle)
-            LIBRARY.dtrace_work(self.handle, None, self.chew, self.chew_rec,
-                                None)
-
+            status = LIBRARY.dtrace_work(self.handle, None, self.chew,
+                                         self.chew_rec, None)
+            if status == DTRACE_WORKSTATUS_ERROR:
+                raise Exception('dtrace_work failed: ',
+                                get_error_msg(self.handle))
+            elif status == DTRACE_WORKSTATUS_DONE:
+                break  # No more work
+            assert status == DTRACE_WORKSTATUS_OKAY, status
             time.sleep(1)
             i += 1
 
@@ -349,9 +357,14 @@ class DTraceConsumerThread(Thread):
         # aggregate data for a few sec...
         while not self.stopped():
             LIBRARY.dtrace_sleep(self.handle)
-            LIBRARY.dtrace_work(self.handle, None, self.chew, self.chew_rec,
-                                None)
-
+            status = LIBRARY.dtrace_work(self.handle, None, self.chew,
+                                         self.chew_rec, None)
+            if status == DTRACE_WORKSTATUS_ERROR:
+                raise Exception('dtrace_work failed: ',
+                                get_error_msg(self.handle))
+            elif status == DTRACE_WORKSTATUS_DONE:
+                break  # No more work
+            assert status == DTRACE_WORKSTATUS_OKAY, status
             if LIBRARY.dtrace_aggregate_snap(self.handle) != 0:
                 raise Exception('Failed to snapshot the aggregate: ',
                                 get_error_msg(self.handle))

@@ -321,9 +321,14 @@ cdef class DTraceConsumer:
             dtrace_sleep(self.handle)
             status = dtrace_work(self.handle, NULL, & chew, & chewrec,
                                  <void *>args)
-            if status == 1:
-                i = runtime
+            if status == DTRACE_WORKSTATUS_DONE:
+                break
+            elif status == DTRACE_WORKSTATUS_ERROR:
+                raise Exception('dtrace_work failed: ',
+                                dtrace_errmsg(self.handle,
+                                              dtrace_errno(self.handle)))
             else:
+                assert status == DTRACE_WORKSTATUS_OKAY, status
                 time.sleep(1)
                 i += 1
                 
@@ -428,7 +433,10 @@ cdef class DTraceContinuousConsumer:
         args = (self.chew_func, self.chewrec_func)
         status = dtrace_work(self.handle, NULL, & chew, & chewrec,
                              <void *>args)
-
+        if status == DTRACE_WORKSTATUS_ERROR:
+            raise Exception('dtrace_work failed: ',
+                            dtrace_errmsg(self.handle,
+                                          dtrace_errno(self.handle)))
         if dtrace_aggregate_snap(self.handle) != 0:
             raise Exception('Failed to get the aggregate: ',
                             dtrace_errmsg(self.handle,
