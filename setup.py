@@ -11,12 +11,13 @@ Created on Oct 10, 2011
 from distutils.core import setup
 from distutils.extension import Extension
 try:
-    from Cython.Distutils import build_ext
+    from Cython.Build import build_ext, cythonize
 
     BUILD_EXTENSION = {'build_ext': build_ext}
-    EXT_MODULES = [Extension("dtrace", ["dtrace_cython/dtrace_h.pxd",
-                                        "dtrace_cython/consumer.pyx"],
-                             libraries=["dtrace"])]
+    EXT_MODULES = cythonize([Extension("dtrace", ["dtrace_cython/dtrace_h.pxd",
+                                                  "dtrace_cython/consumer.pyx"],
+                             libraries=["dtrace"])],
+        language_level=2)
 
 except ImportError:
     BUILD_EXTENSION = {}
