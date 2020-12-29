@@ -238,8 +238,8 @@ class DTraceConsumer(object):
             raise Exception('Unable to set the stdout buffered writer.')
 
         # compile
-        prg = LIBRARY.dtrace_program_strcompile(self.handle,
-                                                script, 3, 4, 0, None)
+        prg = LIBRARY.dtrace_program_strcompile(
+            self.handle, c_char_p(script.encode("utf-8")), 3, 4, 0, None)
         if prg is None:
             raise Exception('Unable to compile the script: ',
                             get_error_msg(self.handle))
@@ -266,8 +266,7 @@ class DTraceConsumer(object):
 
         # sorting instead of dtrace_aggregate_walk
 
-        if LIBRARY.dtrace_aggregate_walk_valsorted(self.handle,
-                                                   self.walk,
+        if LIBRARY.dtrace_aggregate_walk_valsorted(self.handle, self.walk,
                                                    None) != 0:
             raise Exception('Failed to walk the aggregate: ',
                             get_error_msg(self.handle))
@@ -331,9 +330,9 @@ class DTraceConsumerThread(Thread):
             raise Exception('Unable to set the stdout buffered writer.')
 
         # compile
-        prg = LIBRARY.dtrace_program_strcompile(self.handle,
-                                                self.script, 3, 4, 0,
-                                                None)
+        prg = LIBRARY.dtrace_program_strcompile(
+            self.handle, c_char_p(self.script.encode("utf-8")), 3, 4, 0,
+            None)
         if prg is None:
             raise Exception('Unable to compile the script: ',
                             get_error_msg(self.handle))
