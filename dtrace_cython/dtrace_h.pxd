@@ -35,9 +35,9 @@ cdef extern from "sys/dtrace.h":
 
     ctypedef struct dtrace_recdesc_t:
         # Taken from sys/dtrace.h:931
-        int dtrd_action
-        int dtrd_offset
-        int dtrd_size
+        uint16_t dtrd_action
+        uint32_t dtrd_offset
+        uint32_t dtrd_size
 
     ctypedef struct dtrace_aggdesc_t:
         # Taken from sys/dtrace.h:950
@@ -45,10 +45,10 @@ cdef extern from "sys/dtrace.h":
         int64_t dtagd_varid
         dtrace_recdesc_t dtagd_rec[1]
 
-    cdef uint16_t DTRACE_LQUANTIZE_STEP(long x)
-    cdef uint16_t DTRACE_LQUANTIZE_LEVELS(long x)
-    cdef int32_t DTRACE_LQUANTIZE_BASE(long x)
-    cdef int64_t DTRACE_QUANTIZE_BUCKETVAL(long buck)
+    cdef uint16_t DTRACE_LQUANTIZE_STEP(uint64_t x)
+    cdef uint16_t DTRACE_LQUANTIZE_LEVELS(uint64_t x)
+    cdef int32_t DTRACE_LQUANTIZE_BASE(uint64_t x)
+    cdef int64_t DTRACE_QUANTIZE_BUCKETVAL(uint64_t buck)
 
 
 cdef extern from "dtrace.h":
