@@ -3,6 +3,7 @@ import time
 import threading
 from threading import Thread
 from dtrace_cython.dtrace_h cimport *
+from libc.stdint cimport INT64_MAX, INT64_MIN
 
 # ----------------------------------------------------------------------------
 # The DTrace callbacks

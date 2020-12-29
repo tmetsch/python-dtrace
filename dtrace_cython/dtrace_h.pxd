@@ -7,18 +7,6 @@ cdef extern from "libelf_workaround.h":
     pass
 
 
-IF UNAME_SYSNAME == "Darwin":
-    cdef extern from "stdint.h":
-        # needed for quantize mths.
-        cdef int64_t INT64_MAX
-        cdef int64_t INT64_MIN
-ELSE:
-    cdef extern from "sys/int_limits.h":
-        # needed for quantize mths.
-        cdef int64_t INT64_MAX
-        cdef int64_t INT64_MIN
-
-
 cdef extern from "sys/dtrace.h":
     uint64_t DTRACE_QUANTIZE_NBUCKETS
     uint64_t DTRACE_QUANTIZE_ZEROBUCKET
