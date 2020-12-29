@@ -7,7 +7,7 @@ Created on Mar 31, 2012
 
 @author: tmetsch
 """
-
+from __future__ import print_function
 import ast
 import pika
 
@@ -34,7 +34,7 @@ def callback(ch, method, properties, body):
         data[key] = val
     # Print instead of doing print you could life update a chart...msg will
     # come as DTrace fires them
-    print 'Received: ', key, val
+    print('Received: ', key, val)
 
 if __name__ == '__main__':
     channel.basic_consume(callback,

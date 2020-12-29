@@ -5,6 +5,7 @@ Created on Oct 10, 2011
 
 @author: tmetsch
 """
+from __future__ import print_function
 import platform
 import threading
 import time
@@ -78,7 +79,7 @@ def simple_walk(data, arg):
     name = cast(tmp + 16, c_char_p).value
     instance = deref(tmp + 272, c_int).value
 
-    print '{0:60s} :{1:10d}'.format(name, instance)
+    print('{0:60s} :{1:10d}'.format(name, instance))
 
     return 0
 

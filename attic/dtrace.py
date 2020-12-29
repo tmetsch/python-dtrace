@@ -4,6 +4,7 @@
 Simple Python based DTrace consumers which executes a Hello World D script
 using libdtrace and ctypes to access it.
 """
+from __future__ import print_function
 from ctypes import cdll, CDLL, Structure, c_void_p, c_char_p, c_uint, c_int, \
     c_char, CFUNCTYPE, POINTER, byref, cast
 import time
@@ -108,7 +109,7 @@ def chew_func(data, arg):
     """
     Callback for chew.
     """
-    print '+--> In chew: cpu :', c_int(data.contents.dtpda_cpu).value
+    print('+--> In chew: cpu :', c_int(data.contents.dtpda_cpu).value)
     return 0
 
 
@@ -126,7 +127,7 @@ def buffered_stdout_writer(bufdata, arg):
     In case dtrace_work is given None as filename - this one is called.
     """
     tmp = c_char_p(bufdata.contents.dtbda_buffered).value.strip()
-    print '  +--> In buffered_stdout_writer: ', tmp
+    print('  +--> In buffered_stdout_writer: ', tmp)
     return 0
 
 
@@ -141,7 +142,7 @@ def walk(data, arg):
     name = cast(tmp + 16, c_char_p).value
     instance = deref(tmp + 272, c_int).value
 
-    print '+--> walking', name, instance
+    print('+--> walking', name, instance)
 
     return 0
 
@@ -194,7 +195,7 @@ def run_dtrace():
 
     # Get errors if any...
     txt = LIBRARY.dtrace_errmsg(handle, LIBRARY.dtrace_errno(handle))
-    print c_char_p(txt).value
+    print(c_char_p(txt).value)
 
     # Last: close handle!
     LIBRARY.dtrace_close(handle)
