@@ -99,10 +99,10 @@ cdef extern from "dtrace.h":
         char * dtada_data
 
     # from dtrace.h
-    ctypedef int dtrace_handle_buffered_f(dtrace_bufdata_t * buf_data, void * arg)
-    ctypedef int dtrace_consume_probe_f(dtrace_probedata_t * , void *)
-    ctypedef int dtrace_consume_rec_f(dtrace_probedata_t * , dtrace_recdesc_t * , void *)
-    ctypedef int dtrace_aggregate_f(dtrace_aggdata_t * , void *)
+    ctypedef int dtrace_handle_buffered_f(const dtrace_bufdata_t * buf_data, void * arg)
+    ctypedef int dtrace_consume_probe_f(const dtrace_probedata_t *, void *)
+    ctypedef int dtrace_consume_rec_f(const dtrace_probedata_t *, const dtrace_recdesc_t * , void *)
+    ctypedef int dtrace_aggregate_f(const dtrace_aggdata_t *, void *)
 
     # open and close handle
     dtrace_hdl_t * dtrace_open(int, int, int *)
@@ -113,9 +113,9 @@ cdef extern from "dtrace.h":
 
     # output handling
     int dtrace_handle_buffered(dtrace_hdl_t * , dtrace_handle_buffered_f * , void *)
-    int dtrace_consume_probe_f(dtrace_probedata_t * , void *)
-    int dtrace_consume_rec_f(dtrace_probedata_t * , dtrace_recdesc_t * , void *)
-    int dtrace_aggregate_f(dtrace_aggdata_t * , void *)
+    int dtrace_consume_probe_f(const dtrace_probedata_t * , void *)
+    int dtrace_consume_rec_f(const dtrace_probedata_t * , dtrace_recdesc_t * , void *)
+    int dtrace_aggregate_f(const dtrace_aggdata_t * , void *)
 
     # compile
     dtrace_prog_t * dtrace_program_strcompile(dtrace_hdl_t * , char * , dtrace_probespec_t, int, int, char * const [])

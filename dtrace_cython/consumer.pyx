@@ -9,7 +9,7 @@ from dtrace_cython.dtrace_h cimport *
 # ----------------------------------------------------------------------------
 
 
-cdef int chew(dtrace_probedata_t * data, void * arg) with gil:
+cdef int chew(const dtrace_probedata_t * data, void * arg) with gil:
     """
     Callback defined by DTrace - will call the Python callback.
 
@@ -26,7 +26,7 @@ cdef int chew(dtrace_probedata_t * data, void * arg) with gil:
     return 0
 
 
-cdef int chewrec(dtrace_probedata_t * data, dtrace_recdesc_t * rec,
+cdef int chewrec(const dtrace_probedata_t * data, const dtrace_recdesc_t * rec,
                  void * arg) with gil:
     """
     Callback defined by DTrace - will call the Python callback.
@@ -46,7 +46,7 @@ cdef int chewrec(dtrace_probedata_t * data, dtrace_recdesc_t * rec,
     return 0
 
 
-cdef int buf_out(dtrace_bufdata_t * buf_data, void * arg) with gil:
+cdef int buf_out(const dtrace_bufdata_t * buf_data, void * arg) with gil:
     """
     Callback defined by DTrace - will call the Python callback.
     """
@@ -59,7 +59,7 @@ cdef int buf_out(dtrace_bufdata_t * buf_data, void * arg) with gil:
     return 0
 
 
-cdef int walk(dtrace_aggdata_t * data, void * arg) with gil:
+cdef int walk(const dtrace_aggdata_t * data, void * arg) with gil:
     """
     Callback defined by DTrace - will call the Python callback.
     """
