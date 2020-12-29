@@ -2,9 +2,12 @@ from __future__ import print_function, division
 import time
 import threading
 from threading import Thread
+
 from dtrace_cython.dtrace_h cimport *
 from libc.stdint cimport INT64_MAX, INT64_MIN
-from libc.stdio cimport stderr
+from libc.stdio cimport fclose
+from libc.stdlib cimport free
+from posix.stdio cimport open_memstream
 
 # ----------------------------------------------------------------------------
 # The DTrace callbacks
@@ -319,14 +322,21 @@ cdef class DTraceConsumer:
         args = (self.chew_func, self.chewrec_func)
         cdef FILE * fp = NULL
         IF UNAME_SYSNAME == "Darwin":
+            cdef char * memstream
+            cdef size_t size
             # Note: macOS crashes if we pass NULL for fp (FreeBSD works fine)
-            # TODO: use a pipe to get output
-            fp = stderr
+            # As a workaround we use open_memstream to write to memory.
+            fp = open_memstream(&memstream, &size)
+            assert fp != NULL
 
         while i < runtime:
             dtrace_sleep(self.handle)
             status = dtrace_work(self.handle, fp, & chew, & chewrec,
                                  <void *>args)
+            IF UNAME_SYSNAME == "Darwin":
+                fclose(fp)
+                self.out_func((<bytes>memstream).strip())
+                free(memstream)
             if status == DTRACE_WORKSTATUS_DONE:
                 break
             elif status == DTRACE_WORKSTATUS_ERROR:
@@ -439,11 +449,18 @@ cdef class DTraceContinuousConsumer:
         args = (self.chew_func, self.chewrec_func)
         cdef FILE * fp = NULL
         IF UNAME_SYSNAME == "Darwin":
+            cdef char * memstream
+            cdef size_t size
             # Note: macOS crashes if we pass NULL for fp (FreeBSD works fine)
-            # TODO: use a pipe to get output
-            fp = stderr
+            # As a workaround we use open_memstream to write to memory.
+            fp = open_memstream(&memstream, &size)
+            assert fp != NULL
         status = dtrace_work(self.handle, fp, & chew, & chewrec,
                              <void *>args)
+        IF UNAME_SYSNAME == "Darwin":
+            fclose(fp)
+            self.out_func((<bytes>memstream).strip())
+            free(memstream)
         if status == DTRACE_WORKSTATUS_ERROR:
             raise Exception('dtrace_work failed: ',
                             dtrace_errmsg(self.handle,
