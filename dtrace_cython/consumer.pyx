@@ -4,6 +4,7 @@ import threading
 from threading import Thread
 from dtrace_cython.dtrace_h cimport *
 from libc.stdint cimport INT64_MAX, INT64_MIN
+from libc.stdio cimport stderr
 
 # ----------------------------------------------------------------------------
 # The DTrace callbacks
@@ -316,10 +317,15 @@ cdef class DTraceConsumer:
 
         i = 0
         args = (self.chew_func, self.chewrec_func)
+        cdef FILE * fp = NULL
+        IF UNAME_SYSNAME == "Darwin":
+            # Note: macOS crashes if we pass NULL for fp (FreeBSD works fine)
+            # TODO: use a pipe to get output
+            fp = stderr
 
         while i < runtime:
             dtrace_sleep(self.handle)
-            status = dtrace_work(self.handle, NULL, & chew, & chewrec,
+            status = dtrace_work(self.handle, fp, & chew, & chewrec,
                                  <void *>args)
             if status == DTRACE_WORKSTATUS_DONE:
                 break
@@ -431,7 +437,12 @@ cdef class DTraceContinuousConsumer:
         Snapshot the data and walk the aggregate.
         """
         args = (self.chew_func, self.chewrec_func)
-        status = dtrace_work(self.handle, NULL, & chew, & chewrec,
+        cdef FILE * fp = NULL
+        IF UNAME_SYSNAME == "Darwin":
+            # Note: macOS crashes if we pass NULL for fp (FreeBSD works fine)
+            # TODO: use a pipe to get output
+            fp = stderr
+        status = dtrace_work(self.handle, fp, & chew, & chewrec,
                              <void *>args)
         if status == DTRACE_WORKSTATUS_ERROR:
             raise Exception('dtrace_work failed: ',
