@@ -11,6 +11,7 @@ import threading
 import time
 from ctypes import (byref, c_char_p, c_int, c_uint, c_void_p, cast, cdll,
                     CDLL, CFUNCTYPE, POINTER)
+from ctypes.util import find_library
 from threading import Thread
 
 from dtrace_ctypes.dtrace_structs import (dtrace_aggdata, dtrace_bufdata,
@@ -20,11 +21,7 @@ from dtrace_ctypes.dtrace_structs import (dtrace_aggdata, dtrace_bufdata,
                                           DTRACE_WORKSTATUS_DONE,
                                           DTRACE_WORKSTATUS_ERROR)
 
-if platform.system().startswith("Darwin"):
-    _LIBNAME = "libdtrace.dylib"
-else:
-    _LIBNAME = "libdtrace.so"
-_LIBRARY = cdll.LoadLibrary(_LIBNAME)
+_LIBRARY = cdll.LoadLibrary(find_library("dtrace"))
 
 # =============================================================================
 # chewing and output walkers
