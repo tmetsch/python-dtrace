@@ -28,7 +28,7 @@ def walk(iden, key, value):
     Walker which sends on the data to RabbitMQ as the DTrace probes fire.
     """
     channel.basic_publish(exchange='', routing_key='dtrace',
-                          body=str({key[0]: value}))
+                          body=bytes({key[0]: value}))
 
 
 def run_dtrace():

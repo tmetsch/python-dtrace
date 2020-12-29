@@ -37,9 +37,9 @@ def callback(ch, method, properties, body):
     print('Received: ', key, val)
 
 if __name__ == '__main__':
-    channel.basic_consume(callback,
+    channel.basic_consume(on_message_callback=callback,
                           queue='dtrace',
-                          no_ack=True)
+                          auto_ack=False)
 
     try:
         channel.start_consuming()
