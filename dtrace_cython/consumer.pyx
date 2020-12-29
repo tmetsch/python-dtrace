@@ -154,9 +154,9 @@ cdef get_quantize_ranges():
 cdef get_lquantize_ranges(uint64_t arg):
     ranges = []
 
-    base = DTRACE_LQUANTIZE_BASE(arg);
-    step = DTRACE_LQUANTIZE_STEP(arg);
-    levels = DTRACE_LQUANTIZE_LEVELS(arg);
+    base = DTRACE_LQUANTIZE_BASE(arg)
+    step = DTRACE_LQUANTIZE_STEP(arg)
+    levels = DTRACE_LQUANTIZE_LEVELS(arg)
 
     for i in range(0, levels + 2):
         if i == 0:
