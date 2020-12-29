@@ -20,24 +20,18 @@ ELSE:
 
 
 cdef extern from "sys/dtrace.h":
+    uint64_t DTRACE_QUANTIZE_NBUCKETS
+    uint64_t DTRACE_QUANTIZE_ZEROBUCKET
 
-    ctypedef enum agg_actions:
-        # Taken from sys/dtrace.h:454
-        # Needs to be in enum because ctypes wants it that way :-/
-        DTRACEACT_AGGREGATION = 0x0700
-        DTRACEAGG_COUNT = (DTRACEACT_AGGREGATION + 1)
-        DTRACEAGG_MIN = (DTRACEACT_AGGREGATION + 2)
-        DTRACEAGG_MAX = (DTRACEACT_AGGREGATION + 3)
-        DTRACEAGG_AVG = (DTRACEACT_AGGREGATION + 4)
-        DTRACEAGG_SUM = (DTRACEACT_AGGREGATION + 5)
-        # + 6 is DTRACEAGG_STDDEV (unsupported)
-        DTRACEAGG_QUANTIZE = (DTRACEACT_AGGREGATION + 7)
-        DTRACEAGG_LQUANTIZE = (DTRACEACT_AGGREGATION + 8)
-
-    ctypedef enum quantize_types:
-        # NBBY = 8
-        DTRACE_QUANTIZE_NBUCKETS = (((sizeof (uint64_t) * 8) - 1) * 2 + 1)
-        DTRACE_QUANTIZE_ZEROBUCKET = ((sizeof (uint64_t) * 8) - 1)
+    int DTRACEACT_AGGREGATION
+    int DTRACEAGG_COUNT
+    int DTRACEAGG_MIN
+    int DTRACEAGG_MAX
+    int DTRACEAGG_AVG
+    int DTRACEAGG_SUM
+    int DTRACEAGG_STDDEV # (unsupported)
+    int DTRACEAGG_QUANTIZE
+    int DTRACEAGG_LQUANTIZE
 
     ctypedef struct dtrace_recdesc_t:
         # Taken from sys/dtrace.h:931
@@ -61,16 +55,16 @@ cdef extern from "dtrace.h":
 
     ctypedef enum dtrace_probespec_t:
         # Taken from dtrace.h:186
-        DTRACE_PROBESPEC_NONE = -1
-        DTRACE_PROBESPEC_PROVIDER = 0
+        DTRACE_PROBESPEC_NONE
+        DTRACE_PROBESPEC_PROVIDER
         DTRACE_PROBESPEC_MOD
         DTRACE_PROBESPEC_FUNC
         DTRACE_PROBESPEC_NAME
 
     ctypedef enum dtrace_workstatus_t:
         # Taken from dtrace.h:247
-        DTRACE_WORKSTATUS_ERROR = -1,
-        DTRACE_WORKSTATUS_OKAY,
+        DTRACE_WORKSTATUS_ERROR
+        DTRACE_WORKSTATUS_OKAY
         DTRACE_WORKSTATUS_DONE
 
     ctypedef struct dtrace_hdl_t:
