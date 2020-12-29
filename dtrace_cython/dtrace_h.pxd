@@ -79,13 +79,24 @@ cdef extern from "dtrace.h":
         # Taken from dtrace.h:97
         pass
 
+    ctypedef struct dtrace_probedesc_t:
+        uint32_t id
+        char dtpd_provider[64]  # DTRACE_PROVNAMELEN
+        char dtpd_mod[64]  # DTRACE_MODNAMELEN
+        char dtpd_func[192]  # DTRACE_FUNCNAMELEN
+        char dtpd_name[64]  # DTRACE_NAMELEN
+
     ctypedef struct dtrace_probedata_t:
         # Taken from dtrace.h:186
+        dtrace_hdl_t * dtbda_handle
+        dtrace_probedesc_t * dtpda_pdesc
         int dtpda_cpu
 
     ctypedef struct dtrace_bufdata_t:
         # Taken from dtrace.h:310
-        char * dtbda_buffered
+        dtrace_hdl_t * dtbda_handle
+        const char * dtbda_buffered
+        dtrace_probedata_t * dtbda_probe
 
     ctypedef struct dtrace_aggdata_t:
         # Taken from dtrace.h:351
