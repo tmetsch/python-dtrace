@@ -265,21 +265,21 @@ cdef class DTraceConsumer:
         if self.handle != NULL:
             dtrace_close(self.handle)
 
-    cpdef compile(self, char * script):
+    cpdef compile(self, unicode script):
         """
         Compile a DTrace script and return errors if any.
         
         script -- The script to compile.
         """
         cdef dtrace_prog_t * prg
-        prg = dtrace_program_strcompile(self.handle, script,
+        prg = dtrace_program_strcompile(self.handle, script.encode("utf-8"),
                                         DTRACE_PROBESPEC_NAME, 0, 0, NULL)
         if prg == NULL:
             raise Exception('Unable to compile the script: ',
                             dtrace_errmsg(self.handle,
                                           dtrace_errno(self.handle)))
 
-    cpdef run(self, char * script, runtime=1):
+    cpdef run(self, unicode script, runtime=1):
         """
         Run a DTrace script for a number of seconds defined by the runtime.
 
@@ -297,7 +297,7 @@ cdef class DTraceConsumer:
 
         # compile
         cdef dtrace_prog_t * prg
-        prg = dtrace_program_strcompile(self.handle, script,
+        prg = dtrace_program_strcompile(self.handle, script.encode("utf-8"),
                                         DTRACE_PROBESPEC_NAME, 0, 0, NULL)
         if prg == NULL:
             raise Exception('Unable to compile the script: ',
@@ -355,7 +355,7 @@ cdef class DTraceContinuousConsumer:
     cdef object chewrec_func
     cdef object script
 
-    def __init__(self, script, chew_func=None, chewrec_func=None,
+    def __init__(self, unicode script, chew_func=None, chewrec_func=None,
                  out_func=None, walk_func=None):
         """
         Constructor. will get the DTrace handle
@@ -364,7 +364,7 @@ cdef class DTraceContinuousConsumer:
         self.chewrec_func = chewrec_func or simple_chewrec
         self.out_func = out_func or simple_out
         self.walk_func = walk_func or simple_walk
-        self.script = script
+        self.script = script.encode("utf-8")
 
         cdef int err
         if not hasattr(self, 'handle'):

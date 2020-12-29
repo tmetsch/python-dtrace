@@ -27,7 +27,7 @@ class TestDTraceConsumer(unittest.TestCase):
 
     def test_run_for_sanity(self):
         self.consumer.run(SCRIPT)
-        self.assertEquals(self.out, 'Hello World')
+        self.assertEqual(self.out, b'Hello World')
 
     def _get_output(self, data, arg):
         tmp = c_char_p(data.contents.dtbda_buffered).value.strip()
