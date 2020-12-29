@@ -11,3 +11,4 @@ out.txt
 dtrace/dtrace.c
 .tox
 .idea/
+/dtrace_cython/consumer.c
