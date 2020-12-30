@@ -257,11 +257,11 @@ cdef class DTraceConsumer:
             raise Exception(dtrace_errmsg(self.handle,
                                           dtrace_errno(self.handle)))
 
-    def __delalloc__(self):
+    def __dealloc__(self):
         """
         Release DTrace handle.
         """
-        if self.handle != NULL:
+        if hasattr(self, 'handle') and self.handle != NULL:
             dtrace_close(self.handle)
 
     cpdef compile(self, char * script):
@@ -376,11 +376,11 @@ cdef class DTraceContinuousConsumer:
             raise Exception(dtrace_errmsg(self.handle,
                                           dtrace_errno(self.handle)))
 
-    def __delalloc__(self):
+    def __dealloc__(self):
         """
         Release DTrace handle.
         """
-        if self.handle != NULL:
+        if hasattr(self, 'handle') and self.handle != NULL:
             dtrace_stop(self.handle)
             dtrace_close(self.handle)
 
