@@ -32,3 +32,4 @@ class TestDTraceConsumer(unittest.TestCase):
     def _get_output(self, data, arg):
         tmp = c_char_p(data.contents.dtbda_buffered).value.strip()
         self.out = tmp
+        return 0
