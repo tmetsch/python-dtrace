@@ -8,12 +8,13 @@ Created on Mar 28, 2012
 @author: tmetsch
 """
 from __future__ import print_function
-from dtrace import DTraceConsumer
+
+import dtrace
 
 SCRIPT = 'syscall::read:entry { @dist[execname] = lquantize(arg0, 0, 12, 2); }'
 
 
-def my_walk(action, identifier, key, values):
+def my_walk(_action, _identifier, key, values):
     """
     Walk the aggregate.
     """
@@ -27,8 +28,9 @@ def main():
     """
     Run DTrace...
     """
-    consumer = DTraceConsumer(walk_func=my_walk)
+    consumer = dtrace.DTraceConsumer(walk_func=my_walk)
     consumer.run(SCRIPT, 5)
+
 
 if __name__ == '__main__':
     main()

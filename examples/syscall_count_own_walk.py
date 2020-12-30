@@ -9,12 +9,13 @@ Created on Oct 10, 2011
 @author: tmetsch
 """
 from __future__ import print_function
-from dtrace import DTraceConsumer
+
+import dtrace
 
 SCRIPT = 'syscall:::entry { @num[execname] = count(); }'
 
 
-def my_walk(action, identifier, key, value):
+def my_walk(_action, identifier, key, value):
     """
     Aggregate walker.
     """
@@ -25,8 +26,9 @@ def main():
     """
     Run DTrace...
     """
-    consumer = DTraceConsumer(walk_func=my_walk)
+    consumer = dtrace.DTraceConsumer(walk_func=my_walk)
     consumer.run(SCRIPT, 4)
+
 
 if __name__ == '__main__':
     main()

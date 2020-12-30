@@ -8,9 +8,12 @@ Created on Apr 11, 2012
 
 @author: tmetsch
 """
+
 from __future__ import print_function
-from dtrace import DTraceConsumerThread
+
 import sys
+
+import dtrace
 
 
 def print_lquantize(values):
@@ -26,14 +29,14 @@ def print_lquantize(values):
     for item in values:
         if item[0][0] > 0:
             print('%10s ' % item[0][0], end=' ')
-            for i in range(0, ((40 * int(item[1])) / maxi)):
+            for _ in range(0, ((40 * int(item[1])) / maxi)):
                 sys.stdout.write('*')
-            for i in range(((40 * int(item[1])) / maxi), 40):
+            for _ in range(((40 * int(item[1])) / maxi), 40):
                 sys.stdout.write(' ')
             print(' %5s' % item[1])
 
 
-def pretty_print(iden, action, keys, values):
+def pretty_print(_iden, action, keys, values):
     """
     Pretty print aggregation walker.
     """
@@ -60,7 +63,7 @@ def run_dtrace(script):
     """
     Run DTrace till Ctrl+C is pressed...
     """
-    thr = DTraceConsumerThread(script, False, walk_func=pretty_print)
+    thr = dtrace.DTraceConsumerThread(script, False, walk_func=pretty_print)
     thr.start()
     brendan()
     try:
@@ -69,6 +72,7 @@ def run_dtrace(script):
     except (KeyboardInterrupt, SystemExit):
         thr.stop()
         thr.join()
+
 
 if __name__ == '__main__':
     # run_dtrace('dtrace:::BEGIN {trace("Hello World"); exit(0);}')

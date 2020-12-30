@@ -8,7 +8,7 @@ Created on Oct 10, 2011
 @author: tmetsch
 """
 
-from dtrace import DTraceConsumer
+import dtrace
 
 SCRIPT = 'syscall:::entry { @num[pid,execname] = count(); }'
 
@@ -17,8 +17,9 @@ def main():
     """
     Run DTrace...
     """
-    consumer = DTraceConsumer()
+    consumer = dtrace.DTraceConsumer()
     consumer.run(SCRIPT, 2)
+
 
 if __name__ == '__main__':
     main()

@@ -29,6 +29,6 @@ class TestDTraceConsumer(unittest.TestCase):
         self.consumer.run(SCRIPT)
         self.assertEqual(self.out, b'Hello World')
 
-    def _get_output(self, data, arg):
+    def _get_output(self, data, _arg):
         tmp = c_char_p(data.contents.dtbda_buffered).value.strip()
         self.out = tmp
