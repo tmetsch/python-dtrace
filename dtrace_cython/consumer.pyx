@@ -224,6 +224,25 @@ def simple_walk(action, identifier, keys, value):
 # The consumers
 # ----------------------------------------------------------------------------
 
+cdef int _dtrace_sleep_and_work(dtrace_hdl_t * handle, void * args, out_func):
+    cdef FILE *fp = NULL
+    IF UNAME_SYSNAME == "Darwin":
+        cdef char *memstream
+        cdef size_t size
+        # Note: macOS crashes if we pass NULL for fp (FreeBSD works fine)
+        # As a workaround we use open_memstream to write to memory.
+        fp = open_memstream(&memstream, &size)
+        assert fp != NULL
+    status = dtrace_work(handle, fp, &chew, &chewrec, <void *> args)
+    IF UNAME_SYSNAME == "Darwin":
+        fclose(fp)
+        out_func((<bytes> memstream).strip())
+        free(memstream)
+    if status == DTRACE_WORKSTATUS_ERROR:
+        raise Exception('dtrace_work failed: ',
+                        dtrace_errmsg(handle, dtrace_errno(handle)))
+    return status
+
 
 cdef class DTraceConsumer:
     """
@@ -320,23 +339,10 @@ cdef class DTraceConsumer:
 
         i = 0
         args = (self.chew_func, self.chewrec_func)
-        cdef FILE * fp = NULL
-        IF UNAME_SYSNAME == "Darwin":
-            cdef char * memstream
-            cdef size_t size
-            # Note: macOS crashes if we pass NULL for fp (FreeBSD works fine)
-            # As a workaround we use open_memstream to write to memory.
-            fp = open_memstream(&memstream, &size)
-            assert fp != NULL
-
         while i < runtime:
             dtrace_sleep(self.handle)
-            status = dtrace_work(self.handle, fp, & chew, & chewrec,
-                                 <void *>args)
-            IF UNAME_SYSNAME == "Darwin":
-                fclose(fp)
-                self.out_func((<bytes>memstream).strip())
-                free(memstream)
+            status = _dtrace_sleep_and_work(self.handle, <void *>args,
+                                            self.out_func)
             if status == DTRACE_WORKSTATUS_DONE:
                 break
             elif status == DTRACE_WORKSTATUS_ERROR:
@@ -447,24 +453,8 @@ cdef class DTraceContinuousConsumer:
         Snapshot the data and walk the aggregate.
         """
         args = (self.chew_func, self.chewrec_func)
-        cdef FILE * fp = NULL
-        IF UNAME_SYSNAME == "Darwin":
-            cdef char * memstream
-            cdef size_t size
-            # Note: macOS crashes if we pass NULL for fp (FreeBSD works fine)
-            # As a workaround we use open_memstream to write to memory.
-            fp = open_memstream(&memstream, &size)
-            assert fp != NULL
-        status = dtrace_work(self.handle, fp, & chew, & chewrec,
-                             <void *>args)
-        IF UNAME_SYSNAME == "Darwin":
-            fclose(fp)
-            self.out_func((<bytes>memstream).strip())
-            free(memstream)
-        if status == DTRACE_WORKSTATUS_ERROR:
-            raise Exception('dtrace_work failed: ',
-                            dtrace_errmsg(self.handle,
-                                          dtrace_errno(self.handle)))
+        status = _dtrace_sleep_and_work(self.handle, <void *>args,
+                                        self.out_func)
         if dtrace_aggregate_snap(self.handle) != 0:
             raise Exception('Failed to get the aggregate: ',
                             dtrace_errmsg(self.handle,

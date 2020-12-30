@@ -211,6 +211,23 @@ def _get_dtrace_work_fp():
     return None, None
 
 
+def _dtrace_sleep_and_work(consumer):
+    LIBRARY.dtrace_sleep(consumer.handle)
+    fp, memstream = _get_dtrace_work_fp()
+    status = LIBRARY.dtrace_work(consumer.handle, fp, consumer.chew,
+                                 consumer.chew_rec, None)
+    if fp is not None:
+        assert memstream.value != 0, memstream
+        libc_fclose(fp)  # buffer is valid after fclose().
+        tmp = dtrace_bufdata()
+        tmp.dtbda_buffered = cast(memstream, c_char_p)
+        consumer.buf_out(byref(tmp), None)
+    if status == DTRACE_WORKSTATUS_ERROR:
+        raise Exception('dtrace_work failed: ',
+                        get_error_msg(consumer.handle))
+    return status
+
+
 class DTraceConsumer:
     """
     A Pyton based DTrace consumer.
@@ -288,19 +305,7 @@ class DTraceConsumer:
         # aggregate data for a few sec...
         i = 0
         while i < runtime:
-            LIBRARY.dtrace_sleep(self.handle)
-            fp, memstream = _get_dtrace_work_fp()
-            status = LIBRARY.dtrace_work(self.handle, fp, self.chew,
-                                         self.chew_rec, None)
-            if memstream is not None:
-                assert memstream.value != 0, memstream
-                libc_fclose(fp)  # buffer is valid after fclose().
-                tmp = dtrace_bufdata()
-                tmp.dtbda_buffered = cast(memstream, c_char_p)
-                self.buf_out(byref(tmp), None)
-            if status == DTRACE_WORKSTATUS_ERROR:
-                raise Exception('dtrace_work failed: ',
-                                get_error_msg(self.handle))
+            status = _dtrace_sleep_and_work(self)
             if status == DTRACE_WORKSTATUS_DONE:
                 break  # No more work
             assert status == DTRACE_WORKSTATUS_OKAY, status
@@ -392,19 +397,7 @@ class DTraceConsumerThread(Thread):
 
         # aggregate data for a few sec...
         while not self.stopped():
-            LIBRARY.dtrace_sleep(self.handle)
-            fp, memstream = _get_dtrace_work_fp()
-            status = LIBRARY.dtrace_work(self.handle, fp, self.chew,
-                                         self.chew_rec, None)
-            if memstream is not None:
-                assert memstream.value != 0, memstream
-                libc_fclose(fp)  # buffer is valid after fclose().
-                tmp = dtrace_bufdata()
-                tmp.dtbda_buffered = cast(memstream, c_char_p)
-                self.buf_out(byref(tmp), None)
-            if status == DTRACE_WORKSTATUS_ERROR:
-                raise Exception('dtrace_work failed: ',
-                                get_error_msg(self.handle))
+            status = _dtrace_sleep_and_work(self)
             if status == DTRACE_WORKSTATUS_DONE:
                 break  # No more work
             assert status == DTRACE_WORKSTATUS_OKAY, status
