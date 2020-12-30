@@ -8,7 +8,7 @@ Created on Apr 11, 2012
 
 @author: tmetsch
 """
-
+from __future__ import print_function
 from dtrace import DTraceConsumerThread
 import sys
 
@@ -25,12 +25,12 @@ def print_lquantize(values):
 
     for item in values:
         if item[0][0] > 0:
-            print '%10s ' % item[0][0],
+            print('%10s ' % item[0][0], end=' ')
             for i in range(0, ((40 * int(item[1])) / maxi)):
                 sys.stdout.write('*')
             for i in range(((40 * int(item[1])) / maxi), 40):
                 sys.stdout.write(' ')
-            print ' %5s' % item[1]
+            print(' %5s' % item[1])
 
 
 def pretty_print(iden, action, keys, values):
@@ -38,12 +38,12 @@ def pretty_print(iden, action, keys, values):
     Pretty print aggregation walker.
     """
     if action in [1799]:
-        print keys, values
+        print(keys, values)
     elif action == 1800:
         # lquantize
-        print '\n    ', keys[0], '\n'
-        print '{0:>10s} {1:-^40} {2}'.format('value', ' Distribution ',
-                                             'count')
+        print('\n    ', keys[0], '\n')
+        print('{0:>10s} {1:-^40} {2}'.format('value', ' Distribution ',
+                                             'count'))
         print_lquantize(values)
     else:
         pass
@@ -53,7 +53,7 @@ def brendan():
     """
     DTrace fans will understand this :-D
     """
-    print 'Tracing... Hit Ctrl-C to end'
+    print('Tracing... Hit Ctrl-C to end')
 
 
 def run_dtrace(script):

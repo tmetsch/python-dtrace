@@ -1,15 +1,16 @@
-
+from __future__ import print_function, division
 import time
 import threading
 from threading import Thread
 from dtrace_cython.dtrace_h cimport *
+from libc.stdint cimport INT64_MAX, INT64_MIN
 
 # ----------------------------------------------------------------------------
 # The DTrace callbacks
 # ----------------------------------------------------------------------------
 
 
-cdef int chew(dtrace_probedata_t * data, void * arg) with gil:
+cdef int chew(const dtrace_probedata_t * data, void * arg) with gil:
     """
     Callback defined by DTrace - will call the Python callback.
 
@@ -26,7 +27,7 @@ cdef int chew(dtrace_probedata_t * data, void * arg) with gil:
     return 0
 
 
-cdef int chewrec(dtrace_probedata_t * data, dtrace_recdesc_t * rec,
+cdef int chewrec(const dtrace_probedata_t * data, const dtrace_recdesc_t * rec,
                  void * arg) with gil:
     """
     Callback defined by DTrace - will call the Python callback.
@@ -46,7 +47,7 @@ cdef int chewrec(dtrace_probedata_t * data, dtrace_recdesc_t * rec,
     return 0
 
 
-cdef int buf_out(dtrace_bufdata_t * buf_data, void * arg) with gil:
+cdef int buf_out(const dtrace_bufdata_t * buf_data, void * arg) with gil:
     """
     Callback defined by DTrace - will call the Python callback.
     """
@@ -59,7 +60,7 @@ cdef int buf_out(dtrace_bufdata_t * buf_data, void * arg) with gil:
     return 0
 
 
-cdef int walk(dtrace_aggdata_t * data, void * arg) with gil:
+cdef int walk(const dtrace_aggdata_t * data, void * arg) with gil:
     """
     Callback defined by DTrace - will call the Python callback.
     """
@@ -90,7 +91,7 @@ cdef int walk(dtrace_aggdata_t * data, void * arg) with gil:
         value = (<int *>(data.dtada_data + aggrec.dtrd_offset))[0]
     elif action == DTRACEAGG_AVG:
         tmp = <int64_t *>(data.dtada_data + aggrec.dtrd_offset)
-        value = tmp[1] / tmp[0]
+        value = tmp[1] // tmp[0]
     elif action == DTRACEAGG_QUANTIZE:
         tmp = <int64_t *>(data.dtada_data + aggrec.dtrd_offset)
         ranges = get_quantize_ranges()
@@ -105,7 +106,7 @@ cdef int walk(dtrace_aggdata_t * data, void * arg) with gil:
         tmp_arg = tmp[0]
 
         ranges = get_lquantize_ranges(tmp_arg)
-        levels = (aggrec.dtrd_size / sizeof (uint64_t)) - 1
+        levels = (aggrec.dtrd_size // sizeof (uint64_t)) - 1
         for i in range(0, levels):
             # i + 1 since tmp[0] is already 'used'
             quantize.append((ranges[i], tmp[i + 1]))
@@ -154,9 +155,9 @@ cdef get_quantize_ranges():
 cdef get_lquantize_ranges(uint64_t arg):
     ranges = []
 
-    base = DTRACE_LQUANTIZE_BASE(arg);
-    step = DTRACE_LQUANTIZE_STEP(arg);
-    levels = DTRACE_LQUANTIZE_LEVELS(arg);
+    base = DTRACE_LQUANTIZE_BASE(arg)
+    step = DTRACE_LQUANTIZE_STEP(arg)
+    levels = DTRACE_LQUANTIZE_LEVELS(arg)
 
     for i in range(0, levels + 2):
         if i == 0:
@@ -182,7 +183,7 @@ def simple_chew(cpu):
 
     cpu -- CPU id.
     """
-    print 'Running on CPU:', cpu
+    print('Running on CPU:', cpu)
 
 
 def simple_chewrec(action):
@@ -191,7 +192,7 @@ def simple_chewrec(action):
 
     action -- id of the action which was called.
     """
-    print 'Called action was:', action
+    print('Called action was:', action)
 
 
 def simple_out(value):
@@ -200,7 +201,7 @@ def simple_out(value):
 
     value -- Line by line string of the DTrace output.
     """
-    print 'Value is:', value
+    print('Value is:', value)
 
 
 def simple_walk(action, identifier, keys, value):
@@ -213,7 +214,7 @@ def simple_walk(action, identifier, keys, value):
     keys -- list of keys.
     value -- the value.
     """
-    print action, identifier, keys, value
+    print(action, identifier, keys, value)
 
 # ----------------------------------------------------------------------------
 # The consumers
@@ -264,21 +265,21 @@ cdef class DTraceConsumer:
         if hasattr(self, 'handle') and self.handle != NULL:
             dtrace_close(self.handle)
 
-    cpdef compile(self, char * script):
+    cpdef compile(self, unicode script):
         """
         Compile a DTrace script and return errors if any.
         
         script -- The script to compile.
         """
         cdef dtrace_prog_t * prg
-        prg = dtrace_program_strcompile(self.handle, script,
+        prg = dtrace_program_strcompile(self.handle, script.encode("utf-8"),
                                         DTRACE_PROBESPEC_NAME, 0, 0, NULL)
         if prg == NULL:
             raise Exception('Unable to compile the script: ',
                             dtrace_errmsg(self.handle,
                                           dtrace_errno(self.handle)))
 
-    cpdef run(self, char * script, runtime=1):
+    cpdef run(self, unicode script, runtime=1):
         """
         Run a DTrace script for a number of seconds defined by the runtime.
 
@@ -296,7 +297,7 @@ cdef class DTraceConsumer:
 
         # compile
         cdef dtrace_prog_t * prg
-        prg = dtrace_program_strcompile(self.handle, script,
+        prg = dtrace_program_strcompile(self.handle, script.encode("utf-8"),
                                         DTRACE_PROBESPEC_NAME, 0, 0, NULL)
         if prg == NULL:
             raise Exception('Unable to compile the script: ',
@@ -320,9 +321,14 @@ cdef class DTraceConsumer:
             dtrace_sleep(self.handle)
             status = dtrace_work(self.handle, NULL, & chew, & chewrec,
                                  <void *>args)
-            if status == 1:
-                i = runtime
+            if status == DTRACE_WORKSTATUS_DONE:
+                break
+            elif status == DTRACE_WORKSTATUS_ERROR:
+                raise Exception('dtrace_work failed: ',
+                                dtrace_errmsg(self.handle,
+                                              dtrace_errno(self.handle)))
             else:
+                assert status == DTRACE_WORKSTATUS_OKAY, status
                 time.sleep(1)
                 i += 1
                 
@@ -349,7 +355,7 @@ cdef class DTraceContinuousConsumer:
     cdef object chewrec_func
     cdef object script
 
-    def __init__(self, script, chew_func=None, chewrec_func=None,
+    def __init__(self, unicode script, chew_func=None, chewrec_func=None,
                  out_func=None, walk_func=None):
         """
         Constructor. will get the DTrace handle
@@ -358,7 +364,7 @@ cdef class DTraceContinuousConsumer:
         self.chewrec_func = chewrec_func or simple_chewrec
         self.out_func = out_func or simple_out
         self.walk_func = walk_func or simple_walk
-        self.script = script
+        self.script = script.encode("utf-8")
 
         cdef int err
         if not hasattr(self, 'handle'):
@@ -427,7 +433,10 @@ cdef class DTraceContinuousConsumer:
         args = (self.chew_func, self.chewrec_func)
         status = dtrace_work(self.handle, NULL, & chew, & chewrec,
                              <void *>args)
-
+        if status == DTRACE_WORKSTATUS_ERROR:
+            raise Exception('dtrace_work failed: ',
+                            dtrace_errmsg(self.handle,
+                                          dtrace_errno(self.handle)))
         if dtrace_aggregate_snap(self.handle) != 0:
             raise Exception('Failed to get the aggregate: ',
                             dtrace_errmsg(self.handle,

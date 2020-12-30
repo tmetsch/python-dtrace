@@ -7,7 +7,7 @@ Created on Oct 10, 2011
 
 @author: tmetsch
 """
-
+from __future__ import print_function
 from dtrace import DTraceConsumerThread
 import time
 
@@ -18,7 +18,7 @@ def my_walk(action, identifier, key, value):
     """
     A simple aggregate walker.
     """
-    print 'Zone "{0:s}" made {1:d} syscalls.'.format(key[0], value)
+    print('Zone "{0:s}" made {1:d} syscalls.'.format(key[0], value))
 
 
 def main():

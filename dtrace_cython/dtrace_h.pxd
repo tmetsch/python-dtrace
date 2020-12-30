@@ -7,70 +7,52 @@ cdef extern from "libelf_workaround.h":
     pass
 
 
-IF UNAME_SYSNAME == "Darwin":
-    cdef extern from "stdint.h":
-        # needed for quantize mths.
-        cdef int64_t INT64_MAX
-        cdef int64_t INT64_MIN
-ELSE:
-    cdef extern from "sys/int_limits.h":
-        # needed for quantize mths.
-        cdef int64_t INT64_MAX
-        cdef int64_t INT64_MIN
-
-
 cdef extern from "sys/dtrace.h":
+    uint64_t DTRACE_QUANTIZE_NBUCKETS
+    uint64_t DTRACE_QUANTIZE_ZEROBUCKET
 
-    ctypedef enum agg_actions:
-        # Taken from sys/dtrace.h:454
-        # Needs to be in enum because ctypes wants it that way :-/
-        DTRACEACT_AGGREGATION = 0x0700
-        DTRACEAGG_COUNT = (DTRACEACT_AGGREGATION + 1)
-        DTRACEAGG_MIN = (DTRACEACT_AGGREGATION + 2)
-        DTRACEAGG_MAX = (DTRACEACT_AGGREGATION + 3)
-        DTRACEAGG_AVG = (DTRACEACT_AGGREGATION + 4)
-        DTRACEAGG_SUM = (DTRACEACT_AGGREGATION + 5)
-        # + 6 is DTRACEAGG_STDDEV (unsupported)
-        DTRACEAGG_QUANTIZE = (DTRACEACT_AGGREGATION + 7)
-        DTRACEAGG_LQUANTIZE = (DTRACEACT_AGGREGATION + 8)
-
-    ctypedef enum quantize_types:
-        # NBBY = 8
-        DTRACE_QUANTIZE_NBUCKETS = (((sizeof (uint64_t) * 8) - 1) * 2 + 1)
-        DTRACE_QUANTIZE_ZEROBUCKET = ((sizeof (uint64_t) * 8) - 1)
+    int DTRACEACT_AGGREGATION
+    int DTRACEAGG_COUNT
+    int DTRACEAGG_MIN
+    int DTRACEAGG_MAX
+    int DTRACEAGG_AVG
+    int DTRACEAGG_SUM
+    int DTRACEAGG_STDDEV # (unsupported)
+    int DTRACEAGG_QUANTIZE
+    int DTRACEAGG_LQUANTIZE
 
     ctypedef struct dtrace_recdesc_t:
         # Taken from sys/dtrace.h:931
-        int dtrd_action
-        int dtrd_offset
-        int dtrd_size
+        uint16_t dtrd_action
+        uint32_t dtrd_offset
+        uint32_t dtrd_size
 
     ctypedef struct dtrace_aggdesc_t:
         # Taken from sys/dtrace.h:950
         int dtagd_nrecs
-        int dtagd_varid
+        int64_t dtagd_varid
         dtrace_recdesc_t dtagd_rec[1]
 
-    cdef uint16_t DTRACE_LQUANTIZE_STEP(long x)
-    cdef uint16_t DTRACE_LQUANTIZE_LEVELS(long x)
-    cdef int32_t DTRACE_LQUANTIZE_BASE(long x)
-    cdef int64_t DTRACE_QUANTIZE_BUCKETVAL(long buck)
+    cdef uint16_t DTRACE_LQUANTIZE_STEP(uint64_t x)
+    cdef uint16_t DTRACE_LQUANTIZE_LEVELS(uint64_t x)
+    cdef int32_t DTRACE_LQUANTIZE_BASE(uint64_t x)
+    cdef int64_t DTRACE_QUANTIZE_BUCKETVAL(uint64_t buck)
 
 
 cdef extern from "dtrace.h":
 
     ctypedef enum dtrace_probespec_t:
         # Taken from dtrace.h:186
-        DTRACE_PROBESPEC_NONE = -1
-        DTRACE_PROBESPEC_PROVIDER = 0
+        DTRACE_PROBESPEC_NONE
+        DTRACE_PROBESPEC_PROVIDER
         DTRACE_PROBESPEC_MOD
         DTRACE_PROBESPEC_FUNC
         DTRACE_PROBESPEC_NAME
 
     ctypedef enum dtrace_workstatus_t:
         # Taken from dtrace.h:247
-        DTRACE_WORKSTATUS_ERROR = -1,
-        DTRACE_WORKSTATUS_OKAY,
+        DTRACE_WORKSTATUS_ERROR
+        DTRACE_WORKSTATUS_OKAY
         DTRACE_WORKSTATUS_DONE
 
     ctypedef struct dtrace_hdl_t:
@@ -85,13 +67,24 @@ cdef extern from "dtrace.h":
         # Taken from dtrace.h:97
         pass
 
+    ctypedef struct dtrace_probedesc_t:
+        uint32_t id
+        char dtpd_provider[64]  # DTRACE_PROVNAMELEN
+        char dtpd_mod[64]  # DTRACE_MODNAMELEN
+        char dtpd_func[192]  # DTRACE_FUNCNAMELEN
+        char dtpd_name[64]  # DTRACE_NAMELEN
+
     ctypedef struct dtrace_probedata_t:
         # Taken from dtrace.h:186
+        dtrace_hdl_t * dtbda_handle
+        dtrace_probedesc_t * dtpda_pdesc
         int dtpda_cpu
 
     ctypedef struct dtrace_bufdata_t:
         # Taken from dtrace.h:310
-        char * dtbda_buffered
+        dtrace_hdl_t * dtbda_handle
+        const char * dtbda_buffered
+        dtrace_probedata_t * dtbda_probe
 
     ctypedef struct dtrace_aggdata_t:
         # Taken from dtrace.h:351
@@ -99,10 +92,10 @@ cdef extern from "dtrace.h":
         char * dtada_data
 
     # from dtrace.h
-    ctypedef int dtrace_handle_buffered_f(dtrace_bufdata_t * buf_data, void * arg)
-    ctypedef int dtrace_consume_probe_f(dtrace_probedata_t * , void *)
-    ctypedef int dtrace_consume_rec_f(dtrace_probedata_t * , dtrace_recdesc_t * , void *)
-    ctypedef int dtrace_aggregate_f(dtrace_aggdata_t * , void *)
+    ctypedef int dtrace_handle_buffered_f(const dtrace_bufdata_t * buf_data, void * arg)
+    ctypedef int dtrace_consume_probe_f(const dtrace_probedata_t *, void *)
+    ctypedef int dtrace_consume_rec_f(const dtrace_probedata_t *, const dtrace_recdesc_t * , void *)
+    ctypedef int dtrace_aggregate_f(const dtrace_aggdata_t *, void *)
 
     # open and close handle
     dtrace_hdl_t * dtrace_open(int, int, int *)
@@ -113,9 +106,9 @@ cdef extern from "dtrace.h":
 
     # output handling
     int dtrace_handle_buffered(dtrace_hdl_t * , dtrace_handle_buffered_f * , void *)
-    int dtrace_consume_probe_f(dtrace_probedata_t * , void *)
-    int dtrace_consume_rec_f(dtrace_probedata_t * , dtrace_recdesc_t * , void *)
-    int dtrace_aggregate_f(dtrace_aggdata_t * , void *)
+    int dtrace_consume_probe_f(const dtrace_probedata_t * , void *)
+    int dtrace_consume_rec_f(const dtrace_probedata_t * , dtrace_recdesc_t * , void *)
+    int dtrace_aggregate_f(const dtrace_aggdata_t * , void *)
 
     # compile
     dtrace_prog_t * dtrace_program_strcompile(dtrace_hdl_t * , char * , dtrace_probespec_t, int, int, char * const [])

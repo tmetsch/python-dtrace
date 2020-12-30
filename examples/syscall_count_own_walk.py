@@ -8,7 +8,7 @@ Created on Oct 10, 2011
 
 @author: tmetsch
 """
-
+from __future__ import print_function
 from dtrace import DTraceConsumer
 
 SCRIPT = 'syscall:::entry { @num[execname] = count(); }'
@@ -18,7 +18,7 @@ def my_walk(action, identifier, key, value):
     """
     Aggregate walker.
     """
-    print '>', identifier, key, value
+    print('>', identifier, key, value)
 
 
 def main():

@@ -7,7 +7,7 @@ Created on Mar 28, 2012
 
 @author: tmetsch
 """
-
+from __future__ import print_function
 from dtrace import DTraceConsumer
 
 SCRIPT = 'syscall::read:entry { @dist[execname] = lquantize(arg0, 0, 12, 2); }'
@@ -17,10 +17,10 @@ def my_walk(action, identifier, key, values):
     """
     Walk the aggregate.
     """
-    print key
+    print(key)
     for item in values:
         if item[0][0] > 0:
-            print '%8s %20s' % (item[0][0], item[1])
+            print('%8s %20s' % (item[0][0], item[1]))
 
 
 def main():

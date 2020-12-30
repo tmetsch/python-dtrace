@@ -8,7 +8,7 @@ Created on Oct 10, 2011
 @author: tmetsch
 """
 
-
+from __future__ import print_function
 from ctypes import cast, c_char_p, c_int
 from dtrace_ctypes.consumer import DTraceConsumerThread, deref
 import time
@@ -25,7 +25,7 @@ def walk(data, arg):
     name = cast(tmp + 16, c_char_p).value
     count = deref(tmp + 272, c_int).value
 
-    print 'Zone "{0:s}" made {1:d} syscalls.'.format(name, count)
+    print('Zone "{0:s}" made {1:d} syscalls.'.format(name, count))
 
     return 0
 
