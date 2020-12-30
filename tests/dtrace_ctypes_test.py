@@ -4,11 +4,12 @@ Unittest for ctypes based consumer.
 
 __author__ = 'tmetsch'
 
-from dtrace_ctypes import consumer
+
+import unittest
 
 from ctypes import c_char_p
 
-import unittest
+from dtrace_ctypes import consumer
 
 SCRIPT = 'dtrace:::BEGIN {trace("Hello World");}'
 
@@ -23,9 +24,15 @@ class TestDTraceConsumer(unittest.TestCase):
         self.consumer = consumer.DTraceConsumer(out_func=self._get_output)
 
     def test_run_for_success(self):
+        """
+        Test for success.
+        """
         self.consumer.run(SCRIPT)
 
     def test_run_for_sanity(self):
+        """
+        Test for sanity.
+        """
         self.consumer.run(SCRIPT)
         self.assertEqual(self.out, b'Hello World')
 
