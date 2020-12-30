@@ -5,18 +5,26 @@ Created on Oct 10, 2011
 
 @author: tmetsch
 """
-
-from ctypes import cdll, CDLL, byref, c_int, c_char_p, CFUNCTYPE, c_void_p, \
-    POINTER, cast
-from dtrace_ctypes.dtrace_structs import dtrace_bufdata, dtrace_probedata, \
-    dtrace_aggdata, dtrace_recdesc
-from threading import Thread
+from __future__ import print_function
+import platform
 import threading
 import time
+from ctypes import (byref, c_char_p, c_int, c_uint, c_void_p, cast, cdll,
+                    CFUNCTYPE, POINTER)
+from threading import Thread
 
-cdll.LoadLibrary("libdtrace.so")
+from dtrace_ctypes.dtrace_structs import (dtrace_aggdata, dtrace_bufdata,
+                                          dtrace_hdl_t, dtrace_probedata,
+                                          dtrace_prog_t, dtrace_recdesc,
+                                          DTRACE_WORKSTATUS_OKAY,
+                                          DTRACE_WORKSTATUS_DONE,
+                                          DTRACE_WORKSTATUS_ERROR)
 
-LIBRARY = CDLL("libdtrace.so")
+if platform.system().startswith("Darwin"):
+    _LIBNAME = "libdtrace.dylib"
+else:
+    _LIBNAME = "libdtrace.so"
+_LIBRARY = cdll.LoadLibrary(_LIBNAME)
 
 # =============================================================================
 # chewing and output walkers
@@ -25,20 +33,20 @@ LIBRARY = CDLL("libdtrace.so")
 
 CHEW_FUNC = CFUNCTYPE(c_int,
                       POINTER(dtrace_probedata),
-                      POINTER(c_void_p))
+                      c_void_p)
 CHEWREC_FUNC = CFUNCTYPE(c_int,
                          POINTER(dtrace_probedata),
                          POINTER(dtrace_recdesc),
-                         POINTER(c_void_p))
+                         c_void_p)
 BUFFERED_FUNC = CFUNCTYPE(c_int,
                           POINTER(dtrace_bufdata),
-                          POINTER(c_void_p))
+                          c_void_p)
 WALK_FUNC = CFUNCTYPE(c_int,
                       POINTER(dtrace_aggdata),
-                      POINTER(c_void_p))
+                      c_void_p)
 
 
-def simple_chew_func(data, arg):
+def simple_chew_func(data, _arg):
     """
     Callback for chew.
     """
@@ -46,7 +54,7 @@ def simple_chew_func(data, arg):
     return 0
 
 
-def simple_chewrec_func(data, rec, arg):
+def simple_chewrec_func(_data, rec, _arg):
     """
     Callback for record chewing.
     """
@@ -55,7 +63,7 @@ def simple_chewrec_func(data, rec, arg):
     return 0
 
 
-def simple_buffered_out_writer(bufdata, arg):
+def simple_buffered_out_writer(bufdata, _arg):
     """
     In case dtrace_work is given None as filename - this one is called.
     """
@@ -64,7 +72,7 @@ def simple_buffered_out_writer(bufdata, arg):
     return 0
 
 
-def simple_walk(data, arg):
+def simple_walk(data, _arg):
     """
     Aggregate walker capable of reading a name and one value.
     """
@@ -74,9 +82,67 @@ def simple_walk(data, arg):
     name = cast(tmp + 16, c_char_p).value
     instance = deref(tmp + 272, c_int).value
 
-    print '{0:60s} :{1:10d}'.format(name, instance)
+    print('{0:60s} :{1:10d}'.format(name.decode(), instance))
 
     return 0
+
+# =============================================================================
+# LibDTrace function wrapper class
+# =============================================================================
+
+
+def _get_dtrace_fn(name, restype, argtypes):
+    tmp = getattr(_LIBRARY, name)
+    tmp.restype = restype
+    tmp.argtypes = argtypes
+    return tmp
+
+
+class LIBRARY:
+    """
+    TODO: add comment.
+    """
+    # Types
+    dtrace_proginfo_t = c_void_p
+    dtrace_probespec_t = c_int  # actually an enum
+    dtrace_workstatus_t = c_int  # actually an enum
+    FILE_p = c_void_p  # FILE*
+    # Functions
+    dtrace_open = _get_dtrace_fn(
+        "dtrace_open", dtrace_hdl_t, [c_int, c_int, POINTER(c_int)])
+    dtrace_close = _get_dtrace_fn(
+        "dtrace_close", None, [dtrace_hdl_t])
+    dtrace_go = _get_dtrace_fn("dtrace_go", c_int, [dtrace_hdl_t])
+    dtrace_stop = _get_dtrace_fn("dtrace_stop", c_int, [dtrace_hdl_t])
+    dtrace_sleep = _get_dtrace_fn("dtrace_sleep", None, [dtrace_hdl_t])
+    dtrace_work = _get_dtrace_fn(
+        "dtrace_work", dtrace_workstatus_t,
+        [dtrace_hdl_t, FILE_p, CHEW_FUNC, CHEWREC_FUNC, c_void_p])
+    dtrace_errno = _get_dtrace_fn(
+        "dtrace_errno", c_int, [dtrace_hdl_t])
+    dtrace_errmsg = _get_dtrace_fn(
+        "dtrace_errmsg", c_char_p, [dtrace_hdl_t, c_int])
+    dtrace_setopt = _get_dtrace_fn(
+        "dtrace_setopt", c_int, [dtrace_hdl_t, c_char_p, c_char_p])
+    dtrace_handle_buffered = _get_dtrace_fn(
+        "dtrace_handle_buffered", c_int,
+        [dtrace_hdl_t, BUFFERED_FUNC, c_void_p])
+    dtrace_aggregate_walk = _get_dtrace_fn(
+        "dtrace_aggregate_walk", c_int,
+        [dtrace_hdl_t, WALK_FUNC, c_void_p])
+    dtrace_aggregate_walk_valsorted = _get_dtrace_fn(
+        "dtrace_aggregate_walk_valsorted", c_int,
+        [dtrace_hdl_t, WALK_FUNC, c_void_p])
+    dtrace_aggregate_snap = _get_dtrace_fn(
+        "dtrace_aggregate_snap", c_int, [dtrace_hdl_t])
+    dtrace_program_strcompile = _get_dtrace_fn(
+        "dtrace_program_strcompile", dtrace_prog_t,
+        [dtrace_hdl_t, c_char_p, dtrace_probespec_t, c_uint, c_int,
+         POINTER(c_char_p)])
+    dtrace_program_exec = _get_dtrace_fn(
+        "dtrace_program_exec", c_int,
+        [dtrace_hdl_t, dtrace_prog_t, dtrace_proginfo_t])
+
 
 # =============================================================================
 # Convenience stuff
@@ -90,23 +156,40 @@ def deref(addr, typ):
     return cast(addr, POINTER(typ)).contents
 
 
-def get_error_msg(handle):
+def get_error_msg(handle, err=None):
     """
     Get the latest and greatest DTrace error.
     """
-    txt = LIBRARY.dtrace_errmsg(handle, LIBRARY.dtrace_errno(handle))
-    return c_char_p(txt).value
+    if err is None:
+        err = LIBRARY.dtrace_errno(handle)
+    txt = LIBRARY.dtrace_errmsg(handle, err)
+    return c_char_p(txt).value.decode("utf-8")
 
 # =============================================================================
 # Consumers
 # =============================================================================
 
 
-class DTraceConsumer(object):
+def _dtrace_open():
+    err = c_int(0)
+    handle = LIBRARY.dtrace_open(3, 0, byref(err))
+    if handle is None or handle == 0:
+        raise Exception('Unable to get a DTrace handle. Error=' +
+                        get_error_msg(handle, err))
+    assert isinstance(handle, dtrace_hdl_t)
+    # set buffer options
+    if LIBRARY.dtrace_setopt(handle, b'bufsize', b'4m') != 0:
+        raise Exception(get_error_msg(handle))
+
+    if LIBRARY.dtrace_setopt(handle, b'aggsize', b'4m') != 0:
+        raise Exception(get_error_msg(handle))
+    return handle
+
+
+class DTraceConsumer:
     """
     A Pyton based DTrace consumer.
     """
-
     def __init__(self,
                  chew_func=None,
                  chew_rec_func=None,
@@ -136,22 +219,14 @@ class DTraceConsumer(object):
             self.buf_out = BUFFERED_FUNC(simple_buffered_out_writer)
 
         # get dtrace handle
-        self.handle = LIBRARY.dtrace_open(3, 0, byref(c_int(0)))
-        if self.handle is None:
-            raise Exception('Unable to get a DTrace handle.')
-
-        # set buffer options
-        if LIBRARY.dtrace_setopt(self.handle, 'bufsize', '4m') != 0:
-            raise Exception(get_error_msg(self.handle))
-
-        if LIBRARY.dtrace_setopt(self.handle, 'aggsize', '4m') != 0:
-            raise Exception(get_error_msg(self.handle))
+        self.handle = _dtrace_open()
 
     def __del__(self):
         """
         Always close the DTrace handle :-)
         """
-        LIBRARY.dtrace_close(self.handle)
+        if hasattr(self, "handle"):  # Don't close if __init__ failed.
+            LIBRARY.dtrace_close(self.handle)
 
     def run(self, script, runtime=1):
         """
@@ -165,13 +240,14 @@ class DTraceConsumer(object):
         runtime -- The time the script should run in second (Default: 1s).
         """
         # set simple output callbacks
+        assert self.handle is not None
         if LIBRARY.dtrace_handle_buffered(self.handle, self.buf_out,
                                           None) == -1:
             raise Exception('Unable to set the stdout buffered writer.')
 
         # compile
-        prg = LIBRARY.dtrace_program_strcompile(self.handle,
-                                                script, 3, 4, 0, None)
+        prg = LIBRARY.dtrace_program_strcompile(
+            self.handle, c_char_p(script.encode("utf-8")), 3, 4, 0, None)
         if prg is None:
             raise Exception('Unable to compile the script: ',
                             get_error_msg(self.handle))
@@ -188,9 +264,14 @@ class DTraceConsumer(object):
         i = 0
         while i < runtime:
             LIBRARY.dtrace_sleep(self.handle)
-            LIBRARY.dtrace_work(self.handle, None, self.chew, self.chew_rec,
-                                None)
-
+            status = LIBRARY.dtrace_work(self.handle, None, self.chew,
+                                         self.chew_rec, None)
+            if status == DTRACE_WORKSTATUS_ERROR:
+                raise Exception('dtrace_work failed: ',
+                                get_error_msg(self.handle))
+            if status == DTRACE_WORKSTATUS_DONE:
+                break  # No more work
+            assert status == DTRACE_WORKSTATUS_OKAY, status
             time.sleep(1)
             i += 1
 
@@ -198,8 +279,7 @@ class DTraceConsumer(object):
 
         # sorting instead of dtrace_aggregate_walk
 
-        if LIBRARY.dtrace_aggregate_walk_valsorted(self.handle,
-                                                   self.walk,
+        if LIBRARY.dtrace_aggregate_walk_valsorted(self.handle, self.walk,
                                                    None) != 0:
             raise Exception('Failed to walk the aggregate: ',
                             get_error_msg(self.handle))
@@ -245,34 +325,27 @@ class DTraceConsumerThread(Thread):
             self.buf_out = BUFFERED_FUNC(simple_buffered_out_writer)
 
         # get dtrace handle
-        self.handle = LIBRARY.dtrace_open(3, 0, byref(c_int(0)))
-        if self.handle is None:
-            raise Exception('Unable to get a DTrace handle.')
-
-        # set buffer options
-        if LIBRARY.dtrace_setopt(self.handle, 'bufsize', '4m') != 0:
-            raise Exception(get_error_msg(self.handle))
-
-        if LIBRARY.dtrace_setopt(self.handle, 'aggsize', '4m') != 0:
-            raise Exception(get_error_msg(self.handle))
+        self.handle = _dtrace_open()
 
     def __del__(self):
         """
         Always close the DTrace handle :-)
         """
-        LIBRARY.dtrace_close(self.handle)
+        if hasattr(self, "handle"):  # Don't close if __init__ failed.
+            LIBRARY.dtrace_close(self.handle)
 
     def run(self):
         Thread.run(self)
+        assert self.handle is not None
         # set simple output callbacks
         if LIBRARY.dtrace_handle_buffered(self.handle, self.buf_out,
                                           None) == -1:
             raise Exception('Unable to set the stdout buffered writer.')
 
         # compile
-        prg = LIBRARY.dtrace_program_strcompile(self.handle,
-                                                self.script, 3, 4, 0,
-                                                None)
+        prg = LIBRARY.dtrace_program_strcompile(
+            self.handle, c_char_p(self.script.encode("utf-8")), 3, 4, 0,
+            None)
         if prg is None:
             raise Exception('Unable to compile the script: ',
                             get_error_msg(self.handle))
@@ -288,9 +361,14 @@ class DTraceConsumerThread(Thread):
         # aggregate data for a few sec...
         while not self.stopped():
             LIBRARY.dtrace_sleep(self.handle)
-            LIBRARY.dtrace_work(self.handle, None, self.chew, self.chew_rec,
-                                None)
-
+            status = LIBRARY.dtrace_work(self.handle, None, self.chew,
+                                         self.chew_rec, None)
+            if status == DTRACE_WORKSTATUS_ERROR:
+                raise Exception('dtrace_work failed: ',
+                                get_error_msg(self.handle))
+            if status == DTRACE_WORKSTATUS_DONE:
+                break  # No more work
+            assert status == DTRACE_WORKSTATUS_OKAY, status
             if LIBRARY.dtrace_aggregate_snap(self.handle) != 0:
                 raise Exception('Failed to snapshot the aggregate: ',
                                 get_error_msg(self.handle))

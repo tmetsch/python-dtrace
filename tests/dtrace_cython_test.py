@@ -39,7 +39,7 @@ class TestDTraceConsumer(unittest.TestCase):
 
     def test_run_for_sanity(self):
         self.consumer.run(SCRIPT)
-        self.assertEquals('Hello World', self.out)
+        self.assertEqual(b'Hello World', self.out)
 
     def _get_output(self, tmp):
         self.out = tmp

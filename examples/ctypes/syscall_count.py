@@ -8,7 +8,7 @@ Created on Oct 10, 2011
 @author: tmetsch
 """
 
-from dtrace_ctypes.consumer import DTraceConsumer
+from dtrace_ctypes import consumer
 
 SCRIPT = 'syscall:::entry { @num[execname] = count(); }'
 
@@ -17,8 +17,9 @@ def main():
     """
     Run DTrace...
     """
-    consumer = DTraceConsumer()
-    consumer.run(SCRIPT, 4)
+    dtrace = consumer.DTraceConsumer()
+    dtrace.run(SCRIPT, 4)
+
 
 if __name__ == '__main__':
     main()

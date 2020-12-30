@@ -9,13 +9,14 @@ Created on Oct 10, 2011
 @author: tmetsch
 """
 
+from __future__ import print_function
 from ctypes import cast, c_char_p, c_int
-from dtrace_ctypes.consumer import DTraceConsumer, deref
+from dtrace_ctypes import consumer
 
 SCRIPT = 'syscall:::entry { @num[execname] = count(); }'
 
 
-def my_walk(data, arg):
+def my_walk(data, _):
     """
     Aggregate walker.
 
@@ -23,9 +24,9 @@ def my_walk(data, arg):
     """
     tmp = data.contents.dtada_data
     name = cast(tmp + 16, c_char_p).value
-    instance = deref(tmp + 272, c_int).value
+    instance = consumer.deref(tmp + 272, c_int).value
 
-    print '{0:4d} > {1:60s}'.format(instance, name)
+    print('{0:4d} > {1:60s}'.format(instance, name.decode()))
 
     return 0
 
@@ -34,8 +35,9 @@ def main():
     """
     Run DTrace...
     """
-    consumer = DTraceConsumer(walk_func=my_walk)
-    consumer.run(SCRIPT, 4)
+    dtrace = consumer.DTraceConsumer(walk_func=my_walk)
+    dtrace.run(SCRIPT, 4)
+
 
 if __name__ == '__main__':
     main()

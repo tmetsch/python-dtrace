@@ -8,7 +8,7 @@ Created on Oct 10, 2011
 @author: tmetsch
 """
 
-from dtrace_ctypes.consumer import DTraceConsumer
+from dtrace_ctypes import consumer
 
 SCRIPT = 'dtrace:::BEGIN {trace("Hello World");}'
 
@@ -17,8 +17,9 @@ def main():
     """
     Run DTrace...
     """
-    consumer = DTraceConsumer()
-    consumer.run(SCRIPT)
+    dtrace = consumer.DTraceConsumer()
+    dtrace.run(SCRIPT)
+
 
 if __name__ == '__main__':
     main()
