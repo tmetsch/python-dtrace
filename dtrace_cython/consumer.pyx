@@ -265,7 +265,7 @@ cdef class DTraceConsumer:
         if hasattr(self, 'handle') and self.handle != NULL:
             dtrace_close(self.handle)
 
-    cpdef compile(self, unicode script):
+    cpdef compile(self, str script):
         """
         Compile a DTrace script and return errors if any.
         
@@ -279,7 +279,7 @@ cdef class DTraceConsumer:
                             dtrace_errmsg(self.handle,
                                           dtrace_errno(self.handle)))
 
-    cpdef run(self, unicode script, runtime=1):
+    cpdef run(self, str script, runtime=1):
         """
         Run a DTrace script for a number of seconds defined by the runtime.
 
@@ -355,7 +355,7 @@ cdef class DTraceContinuousConsumer:
     cdef object chewrec_func
     cdef object script
 
-    def __init__(self, unicode script, chew_func=None, chewrec_func=None,
+    def __init__(self, str script, chew_func=None, chewrec_func=None,
                  out_func=None, walk_func=None):
         """
         Constructor. will get the DTrace handle
