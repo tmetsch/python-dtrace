@@ -9,21 +9,23 @@ Created on Mar 31, 2012
 @author: tmetsch
 """
 
-import dtrace
-import pika
 import time
+
+import pika
+
+import dtrace
 
 # pretty num D script counting syscalls...
 SCRIPT = 'syscall:::entry { @num[execname] = count(); }'
 
 # Connection to the broker
 connection = pika.BlockingConnection(pika.ConnectionParameters(
-                                     host='localhost'))
+    host='localhost'))
 channel = connection.channel()
 channel.queue_declare(queue='dtrace')
 
 
-def walk(iden, key, value):
+def walk(_iden, key, value):
     """
     Walker which sends on the data to RabbitMQ as the DTrace probes fire.
     """
@@ -44,6 +46,7 @@ def run_dtrace():
     # stop and wait for join...
     thr.stop()
     thr.join()
+
 
 if __name__ == '__main__':
     run_dtrace()

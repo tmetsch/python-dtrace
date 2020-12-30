@@ -15,15 +15,20 @@ from ctypes import (c_int64, c_size_t, c_uint16, c_uint32, c_uint64, POINTER,
 
 
 class dtrace_hdl(Structure):
-    pass
+    """
+    DTrace handle.
+    """
 
 
 class dtrace_prog(Structure):
-    pass
+    """
+    DTrace prog.
+    """
 
 
 dtrace_hdl_t = POINTER(dtrace_hdl)
 dtrace_prog_t = POINTER(dtrace_prog)
+
 
 class dtrace_recdesc(Structure):
     """

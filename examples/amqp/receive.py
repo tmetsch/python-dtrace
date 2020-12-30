@@ -13,7 +13,7 @@ import pika
 
 # Connection to the broker.
 connection = pika.BlockingConnection(pika.ConnectionParameters(
-                                     host='localhost'))
+    host='localhost'))
 channel = connection.channel()
 channel.queue_declare(queue='dtrace')
 
@@ -21,7 +21,7 @@ channel.queue_declare(queue='dtrace')
 data = {}
 
 
-def callback(ch, method, properties, body):
+def callback(_ch, _method, _properties, body):
     """
     Callback which picks up the DTrace messages.
     """
@@ -35,6 +35,7 @@ def callback(ch, method, properties, body):
     # Print instead of doing print you could life update a chart...msg will
     # come as DTrace fires them
     print('Received: ', key, val)
+
 
 if __name__ == '__main__':
     channel.basic_consume(on_message_callback=callback,

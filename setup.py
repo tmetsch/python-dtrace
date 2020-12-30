@@ -29,7 +29,7 @@ except ImportError:
 
 
 setup(name='python-dtrace',
-      version='0.0.10',
+      version='0.0.11',
       description='DTrace consumer for Python based on libdtrace. Use Python'
                   + ' as DTrace Consumer and Provider! See the homepage for'
                   + ' more information.',

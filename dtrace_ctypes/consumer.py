@@ -46,7 +46,7 @@ WALK_FUNC = CFUNCTYPE(c_int,
                       c_void_p)
 
 
-def simple_chew_func(data, arg):
+def simple_chew_func(data, _arg):
     """
     Callback for chew.
     """
@@ -54,7 +54,7 @@ def simple_chew_func(data, arg):
     return 0
 
 
-def simple_chewrec_func(data, rec, arg):
+def simple_chewrec_func(_data, rec, _arg):
     """
     Callback for record chewing.
     """
@@ -63,7 +63,7 @@ def simple_chewrec_func(data, rec, arg):
     return 0
 
 
-def simple_buffered_out_writer(bufdata, arg):
+def simple_buffered_out_writer(bufdata, _arg):
     """
     In case dtrace_work is given None as filename - this one is called.
     """
@@ -72,7 +72,7 @@ def simple_buffered_out_writer(bufdata, arg):
     return 0
 
 
-def simple_walk(data, arg):
+def simple_walk(data, _arg):
     """
     Aggregate walker capable of reading a name and one value.
     """
@@ -82,7 +82,7 @@ def simple_walk(data, arg):
     name = cast(tmp + 16, c_char_p).value
     instance = deref(tmp + 272, c_int).value
 
-    print('{0:60s} :{1:10d}'.format(name, instance))
+    print('{0:60s} :{1:10d}'.format(name.decode(), instance))
 
     return 0
 
@@ -92,13 +92,16 @@ def simple_walk(data, arg):
 
 
 def _get_dtrace_fn(name, restype, argtypes):
-    fn = getattr(_LIBRARY, name)
-    fn.restype = restype
-    fn.argtypes = argtypes
-    return fn
+    tmp = getattr(_LIBRARY, name)
+    tmp.restype = restype
+    tmp.argtypes = argtypes
+    return tmp
 
 
-class LIBRARY(object):
+class LIBRARY:
+    """
+    TODO: add comment.
+    """
     # Types
     dtrace_proginfo_t = c_void_p
     dtrace_probespec_t = c_int  # actually an enum
@@ -166,6 +169,7 @@ def get_error_msg(handle, err=None):
 # Consumers
 # =============================================================================
 
+
 def _dtrace_open():
     err = c_int(0)
     handle = LIBRARY.dtrace_open(3, 0, byref(err))
@@ -182,7 +186,7 @@ def _dtrace_open():
     return handle
 
 
-class DTraceConsumer(object):
+class DTraceConsumer:
     """
     A Pyton based DTrace consumer.
     """
@@ -265,7 +269,7 @@ class DTraceConsumer(object):
             if status == DTRACE_WORKSTATUS_ERROR:
                 raise Exception('dtrace_work failed: ',
                                 get_error_msg(self.handle))
-            elif status == DTRACE_WORKSTATUS_DONE:
+            if status == DTRACE_WORKSTATUS_DONE:
                 break  # No more work
             assert status == DTRACE_WORKSTATUS_OKAY, status
             time.sleep(1)
@@ -362,7 +366,7 @@ class DTraceConsumerThread(Thread):
             if status == DTRACE_WORKSTATUS_ERROR:
                 raise Exception('dtrace_work failed: ',
                                 get_error_msg(self.handle))
-            elif status == DTRACE_WORKSTATUS_DONE:
+            if status == DTRACE_WORKSTATUS_DONE:
                 break  # No more work
             assert status == DTRACE_WORKSTATUS_OKAY, status
             if LIBRARY.dtrace_aggregate_snap(self.handle) != 0:
