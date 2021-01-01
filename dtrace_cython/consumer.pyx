@@ -479,7 +479,7 @@ class DTraceConsumerThread(Thread):
         Initilizes the Thread.
         """
         Thread.__init__(self)
-        self._stop = threading.Event()
+        self._should_stop = threading.Event()
         self.sleep_time = sleep
         self.consume = consume
         self.consumer = DTraceContinuousConsumer(script, chew_func,
@@ -516,10 +516,10 @@ class DTraceConsumerThread(Thread):
         """
         Stop DTrace.
         """
-        self._stop.set()
+        self._should_stop.set()
 
     def stopped(self):
         """
         Used to check the status.
         """
-        return self._stop.isSet()
+        return self._should_stop.isSet()
