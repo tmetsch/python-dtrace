@@ -9,8 +9,8 @@ from __future__ import print_function
 import platform
 import threading
 import time
-from ctypes import (byref, c_char_p, c_int, c_size_t, c_uint, c_void_p, cast, cdll,
-                    CDLL, CFUNCTYPE, POINTER, Structure)
+from ctypes import (byref, c_char_p, c_int, c_size_t, c_uint, c_void_p, cast,
+                    cdll, CDLL, CFUNCTYPE, POINTER, Structure)
 from ctypes.util import find_library
 from threading import Thread
 
@@ -53,6 +53,9 @@ def simple_chew_func(data, _arg):
 
 
 def noop_chew_func(_data, _arg):
+    """
+    No-op chew function.
+    """
     return 0
 
 
@@ -77,7 +80,10 @@ def simple_buffered_out_writer(bufdata, _arg):
     return 0
 
 
-def noop_buffered_out_writer(bufdata, _arg):
+def noop_buffered_out_writer(_bufdata, _arg):
+    """
+    No-op buffered out writer.
+    """
     return 0
 
 
@@ -97,6 +103,9 @@ def simple_walk(data, _arg):
 
 
 def noop_walk(_data, _arg):
+    """
+    No-op walker.
+    """
     return 0
 
 # =============================================================================
@@ -200,7 +209,9 @@ def _dtrace_open():
 
 
 class FILE(Structure):
-    pass
+    """
+    Basic dummy structure.
+    """
 
 
 if _IS_MACOS:
@@ -220,20 +231,20 @@ def _get_dtrace_work_fp():
         # Use open_memstream() as a workaround for this bug.
         memstream = c_void_p(None)
         size = c_size_t(0)
-        fp = libc_open_memstream(byref(memstream), byref(size))
-        assert cast(fp, c_void_p).value != c_void_p(None).value
-        return fp, memstream
+        f_p = libc_open_memstream(byref(memstream), byref(size))
+        assert cast(f_p, c_void_p).value != c_void_p(None).value
+        return f_p, memstream
     return None, None
 
 
 def _dtrace_sleep_and_work(consumer):
     LIBRARY.dtrace_sleep(consumer.handle)
-    fp, memstream = _get_dtrace_work_fp()
-    status = LIBRARY.dtrace_work(consumer.handle, fp, consumer.chew,
+    f_p, memstream = _get_dtrace_work_fp()
+    status = LIBRARY.dtrace_work(consumer.handle, f_p, consumer.chew,
                                  consumer.chew_rec, None)
-    if fp is not None:
+    if f_p is not None:
         assert memstream.value != 0, memstream
-        libc_fclose(fp)  # buffer is valid after fclose().
+        libc_fclose(f_p)  # buffer is valid after fclose().
         tmp = dtrace_bufdata()
         tmp.dtbda_buffered = cast(memstream, c_char_p)
         consumer.buf_out(byref(tmp), None)

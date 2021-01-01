@@ -191,6 +191,9 @@ def simple_chew(cpu):
 
 
 def noop_chew(_cpu):
+    """
+    No-op chew function.
+    """
     pass
 
 
@@ -204,6 +207,9 @@ def simple_chewrec(action):
 
 
 def noop_chewrec(_action):
+    """
+    No-op chewrec function.
+    """
     pass
 
 
@@ -217,6 +223,9 @@ def simple_out(value):
 
 
 def noop_out(_value):
+    """
+    No-op out function.
+    """
     pass
 
 
@@ -234,6 +243,9 @@ def simple_walk(action, identifier, keys, value):
 
 
 def noop_walk(_action, _identifier, _keys, _value):
+    """
+    No-op walker.
+    """
     pass
 
 # ----------------------------------------------------------------------------
@@ -262,7 +274,7 @@ cdef int _dtrace_sleep_and_work(dtrace_hdl_t * handle, void * args, out_func):
 
 cdef class DTraceConsumer:
     """
-    A Pyton based DTrace consumer.
+    A Python based DTrace consumer.
     """
 
     cdef dtrace_hdl_t * handle
@@ -275,10 +287,12 @@ cdef class DTraceConsumer:
                  out_func=simple_out, walk_func=simple_walk):
         """
         Constructor. Gets a DTrace handle and sets some options.
-        Passing None as one of the callback arguments installs a no-op callback.
+        Passing None as one of the callback arguments installs a no-op
+        callback.
         """
         self.chew_func = noop_chew if chew_func is None else chew_func
-        self.chewrec_func = noop_chewrec if chewrec_func is None else simple_chewrec
+        self.chewrec_func = noop_chewrec if chewrec_func is None \
+            else simple_chewrec
         self.out_func = noop_out if out_func is None else out_func
         self.walk_func = noop_walk if walk_func is None else walk_func
 
@@ -394,13 +408,15 @@ cdef class DTraceContinuousConsumer:
     cdef object chewrec_func
     cdef object script
 
-    def __init__(self, str script, chew_func=simple_chew, chewrec_func=simple_chewrec,
-                 out_func=simple_out, walk_func=simple_walk):
+    def __init__(self, str script, chew_func=simple_chew,
+                 chewrec_func=simple_chewrec, out_func=simple_out,
+                 walk_func=simple_walk):
         """
         Constructor. will get the DTrace handle
         """
         self.chew_func = noop_chew if chew_func is None else chew_func
-        self.chewrec_func = noop_chewrec if chewrec_func is None else simple_chewrec
+        self.chewrec_func = noop_chewrec if chewrec_func is None \
+            else simple_chewrec
         self.out_func = noop_out if out_func is None else out_func
         self.walk_func = noop_walk if walk_func is None else walk_func
         self.script = script.encode("utf-8")
