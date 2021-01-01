@@ -2,8 +2,12 @@ from __future__ import print_function, division
 import time
 import threading
 from threading import Thread
+
 from dtrace_cython.dtrace_h cimport *
 from libc.stdint cimport INT64_MAX, INT64_MIN
+from libc.stdio cimport fclose
+from libc.stdlib cimport free
+from posix.stdio cimport open_memstream
 
 # ----------------------------------------------------------------------------
 # The DTrace callbacks
@@ -220,6 +224,25 @@ def simple_walk(action, identifier, keys, value):
 # The consumers
 # ----------------------------------------------------------------------------
 
+cdef int _dtrace_sleep_and_work(dtrace_hdl_t * handle, void * args, out_func):
+    cdef FILE *fp = NULL
+    IF UNAME_SYSNAME == "Darwin":
+        cdef char *memstream
+        cdef size_t size
+        # Note: macOS crashes if we pass NULL for fp (FreeBSD works fine)
+        # As a workaround we use open_memstream to write to memory.
+        fp = open_memstream(&memstream, &size)
+        assert fp != NULL
+    status = dtrace_work(handle, fp, &chew, &chewrec, <void *> args)
+    IF UNAME_SYSNAME == "Darwin":
+        fclose(fp)
+        out_func((<bytes> memstream).strip())
+        free(memstream)
+    if status == DTRACE_WORKSTATUS_ERROR:
+        raise Exception('dtrace_work failed: ',
+                        dtrace_errmsg(handle, dtrace_errno(handle)))
+    return status
+
 
 cdef class DTraceConsumer:
     """
@@ -316,11 +339,10 @@ cdef class DTraceConsumer:
 
         i = 0
         args = (self.chew_func, self.chewrec_func)
-
         while i < runtime:
             dtrace_sleep(self.handle)
-            status = dtrace_work(self.handle, NULL, & chew, & chewrec,
-                                 <void *>args)
+            status = _dtrace_sleep_and_work(self.handle, <void *>args,
+                                            self.out_func)
             if status == DTRACE_WORKSTATUS_DONE:
                 break
             elif status == DTRACE_WORKSTATUS_ERROR:
@@ -431,12 +453,8 @@ cdef class DTraceContinuousConsumer:
         Snapshot the data and walk the aggregate.
         """
         args = (self.chew_func, self.chewrec_func)
-        status = dtrace_work(self.handle, NULL, & chew, & chewrec,
-                             <void *>args)
-        if status == DTRACE_WORKSTATUS_ERROR:
-            raise Exception('dtrace_work failed: ',
-                            dtrace_errmsg(self.handle,
-                                          dtrace_errno(self.handle)))
+        status = _dtrace_sleep_and_work(self.handle, <void *>args,
+                                        self.out_func)
         if dtrace_aggregate_snap(self.handle) != 0:
             raise Exception('Failed to get the aggregate: ',
                             dtrace_errmsg(self.handle,
