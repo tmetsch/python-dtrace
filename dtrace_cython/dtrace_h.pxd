@@ -1,5 +1,6 @@
 
 from libc.stdint cimport uint16_t, int32_t, uint32_t, int64_t, uint64_t
+from libc.stdio cimport FILE
 
 
 cdef extern from "libelf_workaround.h":
@@ -118,7 +119,7 @@ cdef extern from "dtrace.h":
     int dtrace_go(dtrace_hdl_t *)
     int dtrace_stop(dtrace_hdl_t *)
     void dtrace_sleep(dtrace_hdl_t *)
-    dtrace_workstatus_t dtrace_work(dtrace_hdl_t * , char * , dtrace_consume_probe_f * , dtrace_consume_rec_f * , void *)
+    dtrace_workstatus_t dtrace_work(dtrace_hdl_t * , FILE * , dtrace_consume_probe_f * , dtrace_consume_rec_f * , void *)
 
     # walking aggregate
     int dtrace_aggregate_walk_valsorted(dtrace_hdl_t * , dtrace_aggregate_f * , void *)

@@ -9,8 +9,9 @@ from __future__ import print_function
 import platform
 import threading
 import time
-from ctypes import (byref, c_char_p, c_int, c_uint, c_void_p, cast, cdll,
-                    CFUNCTYPE, POINTER)
+from ctypes import (byref, c_char_p, c_int, c_size_t, c_uint, c_void_p, cast, cdll,
+                    CDLL, CFUNCTYPE, POINTER, Structure)
+from ctypes.util import find_library
 from threading import Thread
 
 from dtrace_ctypes.dtrace_structs import (dtrace_aggdata, dtrace_bufdata,
@@ -20,11 +21,8 @@ from dtrace_ctypes.dtrace_structs import (dtrace_aggdata, dtrace_bufdata,
                                           DTRACE_WORKSTATUS_DONE,
                                           DTRACE_WORKSTATUS_ERROR)
 
-if platform.system().startswith("Darwin"):
-    _LIBNAME = "libdtrace.dylib"
-else:
-    _LIBNAME = "libdtrace.so"
-_LIBRARY = cdll.LoadLibrary(_LIBNAME)
+_LIBRARY = cdll.LoadLibrary(find_library("dtrace"))
+_IS_MACOS = platform.system().startswith("Darwin")
 
 # =============================================================================
 # chewing and output walkers
@@ -186,6 +184,50 @@ def _dtrace_open():
     return handle
 
 
+class FILE(Structure):
+    pass
+
+
+if _IS_MACOS:
+    # These are needed to work around a broken libdtrace on macOS.
+    libc_open_memstream = CDLL('libc.dylib').open_memstream
+    libc_open_memstream.restype = POINTER(FILE)
+    libc_open_memstream.argtypes = [POINTER(c_void_p), POINTER(c_size_t)]
+    libc_fclose = CDLL('libc.dylib').fclose
+    libc_fclose.argtypes = [POINTER(FILE)]
+    libc_free = CDLL('libc.dylib').free
+    libc_free.argtypes = [c_void_p]
+
+
+def _get_dtrace_work_fp():
+    if _IS_MACOS:
+        # Note: macOS crashes if we pass NULL for fp (FreeBSD works fine)
+        # Use open_memstream() as a workaround for this bug.
+        memstream = c_void_p(None)
+        size = c_size_t(0)
+        fp = libc_open_memstream(byref(memstream), byref(size))
+        assert cast(fp, c_void_p).value != c_void_p(None).value
+        return fp, memstream
+    return None, None
+
+
+def _dtrace_sleep_and_work(consumer):
+    LIBRARY.dtrace_sleep(consumer.handle)
+    fp, memstream = _get_dtrace_work_fp()
+    status = LIBRARY.dtrace_work(consumer.handle, fp, consumer.chew,
+                                 consumer.chew_rec, None)
+    if fp is not None:
+        assert memstream.value != 0, memstream
+        libc_fclose(fp)  # buffer is valid after fclose().
+        tmp = dtrace_bufdata()
+        tmp.dtbda_buffered = cast(memstream, c_char_p)
+        consumer.buf_out(byref(tmp), None)
+    if status == DTRACE_WORKSTATUS_ERROR:
+        raise Exception('dtrace_work failed: ',
+                        get_error_msg(consumer.handle))
+    return status
+
+
 class DTraceConsumer:
     """
     A Pyton based DTrace consumer.
@@ -263,12 +305,7 @@ class DTraceConsumer:
         # aggregate data for a few sec...
         i = 0
         while i < runtime:
-            LIBRARY.dtrace_sleep(self.handle)
-            status = LIBRARY.dtrace_work(self.handle, None, self.chew,
-                                         self.chew_rec, None)
-            if status == DTRACE_WORKSTATUS_ERROR:
-                raise Exception('dtrace_work failed: ',
-                                get_error_msg(self.handle))
+            status = _dtrace_sleep_and_work(self)
             if status == DTRACE_WORKSTATUS_DONE:
                 break  # No more work
             assert status == DTRACE_WORKSTATUS_OKAY, status
@@ -360,12 +397,7 @@ class DTraceConsumerThread(Thread):
 
         # aggregate data for a few sec...
         while not self.stopped():
-            LIBRARY.dtrace_sleep(self.handle)
-            status = LIBRARY.dtrace_work(self.handle, None, self.chew,
-                                         self.chew_rec, None)
-            if status == DTRACE_WORKSTATUS_ERROR:
-                raise Exception('dtrace_work failed: ',
-                                get_error_msg(self.handle))
+            status = _dtrace_sleep_and_work(self)
             if status == DTRACE_WORKSTATUS_DONE:
                 break  # No more work
             assert status == DTRACE_WORKSTATUS_OKAY, status
