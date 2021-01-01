@@ -509,7 +509,7 @@ class DTraceConsumerThread(Thread):
 
             if self.consume:
                 status = self.consumer.snapshot()
-                if status == 1:
+                if status == DTRACE_WORKSTATUS_DONE:
                     self.stop()
 
     def stop(self):
