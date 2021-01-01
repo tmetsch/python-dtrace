@@ -490,9 +490,12 @@ class DTraceConsumerThread(Thread):
         """
         Make sure DTrace stops.
         """
-        if not self.consume:
-            self.consumer.snapshot()
-        del self.consumer
+        # This is called even if __init__ raises, so we have to check whether
+        # consumer was initialized.
+        if hasattr(self, "consumer"):
+            if not self.consume:
+                self.consumer.snapshot()
+            del self.consumer
 
     def run(self):
         """
