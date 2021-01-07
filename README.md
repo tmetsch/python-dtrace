@@ -70,7 +70,7 @@ has a major drawback since during the wait the Python GIL is acquired and your
 program will stop if it needs to wait for DTrace to get new data. Setting the 
 parameter to 1 (or higher) will let the Thread snapshot the DTrace aggregate 
 every second instead of waiting for new data. Both usages might make sense - 
-Set the sleep parameter if you know data will arrive sporadically or simple
+set the sleep parameter if you know data will arrive sporadically or simply
 let it default to 0 if you know data comes in all the time - so nothing will 
 be blocked.
 
