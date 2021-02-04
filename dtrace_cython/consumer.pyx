@@ -190,6 +190,13 @@ def simple_chew(cpu):
     print('Running on CPU:', cpu)
 
 
+def noop_chew(_cpu):
+    """
+    No-op chew function.
+    """
+    pass
+
+
 def simple_chewrec(action):
     """
     Simple chewrec callback.
@@ -199,6 +206,13 @@ def simple_chewrec(action):
     print('Called action was:', action)
 
 
+def noop_chewrec(_action):
+    """
+    No-op chewrec function.
+    """
+    pass
+
+
 def simple_out(value):
     """
     A buffered output handler for all those prints.
@@ -206,6 +220,13 @@ def simple_out(value):
     value -- Line by line string of the DTrace output.
     """
     print('Value is:', value)
+
+
+def noop_out(_value):
+    """
+    No-op out function.
+    """
+    pass
 
 
 def simple_walk(action, identifier, keys, value):
@@ -219,6 +240,13 @@ def simple_walk(action, identifier, keys, value):
     value -- the value.
     """
     print(action, identifier, keys, value)
+
+
+def noop_walk(_action, _identifier, _keys, _value):
+    """
+    No-op walker.
+    """
+    pass
 
 # ----------------------------------------------------------------------------
 # The consumers
@@ -246,7 +274,7 @@ cdef int _dtrace_sleep_and_work(dtrace_hdl_t * handle, void * args, out_func):
 
 cdef class DTraceConsumer:
     """
-    A Pyton based DTrace consumer.
+    A Python based DTrace consumer.
     """
 
     cdef dtrace_hdl_t * handle
@@ -255,15 +283,18 @@ cdef class DTraceConsumer:
     cdef object chew_func
     cdef object chewrec_func
 
-    def __init__(self, chew_func=None, chewrec_func=None, out_func=None,
-                 walk_func=None):
+    def __init__(self, chew_func=simple_chew, chewrec_func=simple_chewrec,
+                 out_func=simple_out, walk_func=simple_walk):
         """
         Constructor. Gets a DTrace handle and sets some options.
+        Passing None as one of the callback arguments installs a no-op
+        callback.
         """
-        self.chew_func = chew_func or simple_chew
-        self.chewrec_func = chewrec_func or simple_chewrec
-        self.out_func = out_func or simple_out
-        self.walk_func = walk_func or simple_walk
+        self.chew_func = noop_chew if chew_func is None else chew_func
+        self.chewrec_func = noop_chewrec if chewrec_func is None \
+            else simple_chewrec
+        self.out_func = noop_out if out_func is None else out_func
+        self.walk_func = noop_walk if walk_func is None else walk_func
 
         cdef int err
         if not hasattr(self, 'handle'):
@@ -377,15 +408,17 @@ cdef class DTraceContinuousConsumer:
     cdef object chewrec_func
     cdef object script
 
-    def __init__(self, str script, chew_func=None, chewrec_func=None,
-                 out_func=None, walk_func=None):
+    def __init__(self, str script, chew_func=simple_chew,
+                 chewrec_func=simple_chewrec, out_func=simple_out,
+                 walk_func=simple_walk):
         """
         Constructor. will get the DTrace handle
         """
-        self.chew_func = chew_func or simple_chew
-        self.chewrec_func = chewrec_func or simple_chewrec
-        self.out_func = out_func or simple_out
-        self.walk_func = walk_func or simple_walk
+        self.chew_func = noop_chew if chew_func is None else chew_func
+        self.chewrec_func = noop_chewrec if chewrec_func is None \
+            else simple_chewrec
+        self.out_func = noop_out if out_func is None else out_func
+        self.walk_func = noop_walk if walk_func is None else walk_func
         self.script = script.encode("utf-8")
 
         cdef int err
@@ -473,13 +506,14 @@ class DTraceConsumerThread(Thread):
     Helper Thread which can be used to continuously aggregate.
     """
 
-    def __init__(self, script, consume=True, chew_func=None, chewrec_func=None,
-                 out_func=None, walk_func=None, sleep=0):
+    def __init__(self, script, consume=True, chew_func=simple_chew,
+                 chewrec_func=simple_chewrec, out_func=simple_out,
+                 walk_func=simple_walk, sleep=0):
         """
         Initilizes the Thread.
         """
         Thread.__init__(self)
-        self._stop = threading.Event()
+        self._should_stop = threading.Event()
         self.sleep_time = sleep
         self.consume = consume
         self.consumer = DTraceContinuousConsumer(script, chew_func,
@@ -490,9 +524,12 @@ class DTraceConsumerThread(Thread):
         """
         Make sure DTrace stops.
         """
-        if not self.consume:
-            self.consumer.snapshot()
-        del self.consumer
+        # This is called even if __init__ raises, so we have to check whether
+        # consumer was initialized.
+        if hasattr(self, "consumer"):
+            if not self.consume:
+                self.consumer.snapshot()
+            del self.consumer
 
     def run(self):
         """
@@ -509,17 +546,17 @@ class DTraceConsumerThread(Thread):
 
             if self.consume:
                 status = self.consumer.snapshot()
-                if status == 1:
+                if status == DTRACE_WORKSTATUS_DONE:
                     self.stop()
 
     def stop(self):
         """
         Stop DTrace.
         """
-        self._stop.set()
+        self._should_stop.set()
 
     def stopped(self):
         """
         Used to check the status.
         """
-        return self._stop.isSet()
+        return self._should_stop.isSet()

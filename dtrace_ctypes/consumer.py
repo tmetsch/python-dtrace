@@ -9,8 +9,8 @@ from __future__ import print_function
 import platform
 import threading
 import time
-from ctypes import (byref, c_char_p, c_int, c_size_t, c_uint, c_void_p, cast, cdll,
-                    CDLL, CFUNCTYPE, POINTER, Structure)
+from ctypes import (byref, c_char_p, c_int, c_size_t, c_uint, c_void_p, cast,
+                    cdll, CDLL, CFUNCTYPE, POINTER, Structure)
 from ctypes.util import find_library
 from threading import Thread
 
@@ -52,6 +52,13 @@ def simple_chew_func(data, _arg):
     return 0
 
 
+def noop_chew_func(_data, _arg):
+    """
+    No-op chew function.
+    """
+    return 0
+
+
 def simple_chewrec_func(_data, rec, _arg):
     """
     Callback for record chewing.
@@ -61,12 +68,22 @@ def simple_chewrec_func(_data, rec, _arg):
     return 0
 
 
+noop_chewrec_func = simple_chewrec_func
+
+
 def simple_buffered_out_writer(bufdata, _arg):
     """
     In case dtrace_work is given None as filename - this one is called.
     """
     tmp = c_char_p(bufdata.contents.dtbda_buffered).value.strip()
     print('out >', tmp)
+    return 0
+
+
+def noop_buffered_out_writer(_bufdata, _arg):
+    """
+    No-op buffered out writer.
+    """
     return 0
 
 
@@ -82,6 +99,13 @@ def simple_walk(data, _arg):
 
     print('{0:60s} :{1:10d}'.format(name.decode(), instance))
 
+    return 0
+
+
+def noop_walk(_data, _arg):
+    """
+    No-op walker.
+    """
     return 0
 
 # =============================================================================
@@ -185,7 +209,9 @@ def _dtrace_open():
 
 
 class FILE(Structure):
-    pass
+    """
+    Basic dummy structure.
+    """
 
 
 if _IS_MACOS:
@@ -205,20 +231,20 @@ def _get_dtrace_work_fp():
         # Use open_memstream() as a workaround for this bug.
         memstream = c_void_p(None)
         size = c_size_t(0)
-        fp = libc_open_memstream(byref(memstream), byref(size))
-        assert cast(fp, c_void_p).value != c_void_p(None).value
-        return fp, memstream
+        f_p = libc_open_memstream(byref(memstream), byref(size))
+        assert cast(f_p, c_void_p).value != c_void_p(None).value
+        return f_p, memstream
     return None, None
 
 
 def _dtrace_sleep_and_work(consumer):
     LIBRARY.dtrace_sleep(consumer.handle)
-    fp, memstream = _get_dtrace_work_fp()
-    status = LIBRARY.dtrace_work(consumer.handle, fp, consumer.chew,
+    f_p, memstream = _get_dtrace_work_fp()
+    status = LIBRARY.dtrace_work(consumer.handle, f_p, consumer.chew,
                                  consumer.chew_rec, None)
-    if fp is not None:
+    if f_p is not None:
         assert memstream.value != 0, memstream
-        libc_fclose(fp)  # buffer is valid after fclose().
+        libc_fclose(f_p)  # buffer is valid after fclose().
         tmp = dtrace_bufdata()
         tmp.dtbda_buffered = cast(memstream, c_char_p)
         consumer.buf_out(byref(tmp), None)
@@ -233,32 +259,32 @@ class DTraceConsumer:
     A Pyton based DTrace consumer.
     """
     def __init__(self,
-                 chew_func=None,
-                 chew_rec_func=None,
-                 walk_func=None,
-                 out_func=None):
+                 chew_func=simple_chew_func,
+                 chew_rec_func=simple_chewrec_func,
+                 walk_func=simple_walk,
+                 out_func=simple_buffered_out_writer):
         """
         Constructor. will get the DTrace handle
         """
         if chew_func is not None:
             self.chew = CHEW_FUNC(chew_func)
         else:
-            self.chew = CHEW_FUNC(simple_chew_func)
+            self.chew = CHEW_FUNC(noop_chew_func)
 
         if chew_rec_func is not None:
             self.chew_rec = CHEWREC_FUNC(chew_rec_func)
         else:
-            self.chew_rec = CHEWREC_FUNC(simple_chewrec_func)
+            self.chew_rec = CHEWREC_FUNC(noop_chewrec_func)
 
         if walk_func is not None:
             self.walk = WALK_FUNC(walk_func)
         else:
-            self.walk = WALK_FUNC(simple_walk)
+            self.walk = WALK_FUNC(noop_walk)
 
         if out_func is not None:
             self.buf_out = BUFFERED_FUNC(out_func)
         else:
-            self.buf_out = BUFFERED_FUNC(simple_buffered_out_writer)
+            self.buf_out = BUFFERED_FUNC(noop_buffered_out_writer)
 
         # get dtrace handle
         self.handle = _dtrace_open()
@@ -330,10 +356,10 @@ class DTraceConsumerThread(Thread):
 
     def __init__(self,
                  script,
-                 chew_func=None,
-                 chew_rec_func=None,
-                 walk_func=None,
-                 out_func=None):
+                 chew_func=simple_chew_func,
+                 chew_rec_func=simple_chewrec_func,
+                 walk_func=simple_walk,
+                 out_func=simple_buffered_out_writer):
         """
         Constructor. will get the DTrace handle
         """
@@ -344,22 +370,22 @@ class DTraceConsumerThread(Thread):
         if chew_func is not None:
             self.chew = CHEW_FUNC(chew_func)
         else:
-            self.chew = CHEW_FUNC(simple_chew_func)
+            self.chew = CHEW_FUNC(noop_chew_func)
 
         if chew_rec_func is not None:
             self.chew_rec = CHEWREC_FUNC(chew_rec_func)
         else:
-            self.chew_rec = CHEWREC_FUNC(simple_chewrec_func)
+            self.chew_rec = CHEWREC_FUNC(noop_chewrec_func)
 
         if walk_func is not None:
             self.walk = WALK_FUNC(walk_func)
         else:
-            self.walk = WALK_FUNC(simple_walk)
+            self.walk = WALK_FUNC(noop_walk)
 
         if out_func is not None:
             self.buf_out = BUFFERED_FUNC(out_func)
         else:
-            self.buf_out = BUFFERED_FUNC(simple_buffered_out_writer)
+            self.buf_out = BUFFERED_FUNC(noop_buffered_out_writer)
 
         # get dtrace handle
         self.handle = _dtrace_open()

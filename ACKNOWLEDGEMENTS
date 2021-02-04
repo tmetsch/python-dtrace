@@ -5,8 +5,8 @@ Acknowledgements
 Thanks to Marc Abramowitz (https://github.com/msabramo) for testing and porting
 this to Mac OS X. 
 
-Thanks to James Clarke (https://github.com/jrtc27) for looking into leaking of 
-the DTrace handles.
+Thanks to Jessica Clarke (https://github.com/jrtc27) for looking into leaking
+of the DTrace handles.
 
 Thanks to Alexander Richardson (https://github.com/arichardson) for doing a
 huge refactoring and looking into properly supporting python3.
