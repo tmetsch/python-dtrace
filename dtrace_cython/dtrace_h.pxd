@@ -2,6 +2,12 @@
 from libc.stdint cimport uint16_t, int32_t, uint32_t, int64_t, uint64_t
 from libc.stdio cimport FILE
 
+cdef extern from "gelf.h":
+    # used for symbol lookup while using stack()
+
+    ctypedef struct GElf_Sym:
+        pass
+
 
 cdef extern from "libelf_workaround.h":
     # lib elf workaround :-/
@@ -18,7 +24,7 @@ cdef extern from "sys/dtrace.h":
     int DTRACEAGG_MAX
     int DTRACEAGG_AVG
     int DTRACEAGG_SUM
-    int DTRACEAGG_STDDEV # (unsupported)
+    int DTRACEAGG_STDDEV  # (unsupported)
     int DTRACEAGG_QUANTIZE
     int DTRACEAGG_LQUANTIZE
 
@@ -27,6 +33,7 @@ cdef extern from "sys/dtrace.h":
         uint16_t dtrd_action
         uint32_t dtrd_offset
         uint32_t dtrd_size
+        uint64_t dtrd_arg
 
     ctypedef struct dtrace_aggdesc_t:
         # Taken from sys/dtrace.h:950
@@ -89,8 +96,14 @@ cdef extern from "dtrace.h":
 
     ctypedef struct dtrace_aggdata_t:
         # Taken from dtrace.h:351
+        dtrace_hdl_t * dtada_handle
         dtrace_aggdesc_t * dtada_desc
         char * dtada_data
+
+    ctypedef struct dtrace_syminfo_t:
+        const char * dts_object
+        const char * dts_name
+        long bla
 
     # from dtrace.h
     ctypedef int dtrace_handle_buffered_f(const dtrace_bufdata_t * buf_data, void * arg)
@@ -125,6 +138,9 @@ cdef extern from "dtrace.h":
     int dtrace_aggregate_walk_valsorted(dtrace_hdl_t * , dtrace_aggregate_f * , void *)
     int dtrace_aggregate_snap(dtrace_hdl_t *)
     int dtrace_aggregate_walk(dtrace_hdl_t *, dtrace_aggregate_f *, void *)
+
+    # Dealing with stack()
+    int dtrace_lookup_by_addr(dtrace_hdl_t *, uint64_t addr, GElf_Sym *, dtrace_syminfo_t *)
 
     # error handling...
     int dtrace_errno(dtrace_hdl_t * handle)
