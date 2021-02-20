@@ -3,6 +3,8 @@ from libc.stdint cimport uint16_t, int32_t, uint32_t, int64_t, uint64_t
 from libc.stdio cimport FILE
 
 cdef extern from "gelf.h":
+    # used for symbol lookup while using stack()
+
     ctypedef struct GElf_Sym:
         pass
 
@@ -22,7 +24,7 @@ cdef extern from "sys/dtrace.h":
     int DTRACEAGG_MAX
     int DTRACEAGG_AVG
     int DTRACEAGG_SUM
-    int DTRACEAGG_STDDEV # (unsupported)
+    int DTRACEAGG_STDDEV  # (unsupported)
     int DTRACEAGG_QUANTIZE
     int DTRACEAGG_LQUANTIZE
 
@@ -31,7 +33,7 @@ cdef extern from "sys/dtrace.h":
         uint16_t dtrd_action
         uint32_t dtrd_offset
         uint32_t dtrd_size
-        uint64_t dtrd_arg;
+        uint64_t dtrd_arg
 
     ctypedef struct dtrace_aggdesc_t:
         # Taken from sys/dtrace.h:950
@@ -136,6 +138,8 @@ cdef extern from "dtrace.h":
     int dtrace_aggregate_walk_valsorted(dtrace_hdl_t * , dtrace_aggregate_f * , void *)
     int dtrace_aggregate_snap(dtrace_hdl_t *)
     int dtrace_aggregate_walk(dtrace_hdl_t *, dtrace_aggregate_f *, void *)
+
+    # Dealing with stack()
     int dtrace_lookup_by_addr(dtrace_hdl_t *, uint64_t addr, GElf_Sym *, dtrace_syminfo_t *)
 
     # error handling...

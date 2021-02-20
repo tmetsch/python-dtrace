@@ -92,14 +92,14 @@ cdef int walk(const dtrace_aggdata_t * data, void * arg) with gil:
         # TODO: need to extend this.
         if rec.dtrd_size == sizeof(uint32_t):
             keys.append((<int32_t *>address)[0])
-        if rec.dtrd_size == 160:
+        if rec.dtrd_size == 20 * sizeof(uint64_t):
+            # case stack() has been used --> need to lookup symbols.
             for j in range(rec.dtrd_arg):
-                # pc = *((uint64_t *)addr);
                 pc = dereference(<uint64_t *>address)
                 ret = dtrace_lookup_by_addr(data.dtada_handle, pc, &sym, &foo)
                 if ret == 0:
-                    keys.append((foo.dts_object, foo.dts_name))
-                address += 8
+                    keys.append((foo.dts_object,foo.dts_name))
+                address += sizeof(uint64_t)
         else:
             keys.append(<char *>address)
 
