@@ -103,7 +103,7 @@ cdef extern from "dtrace.h":
     ctypedef struct dtrace_syminfo_t:
         const char * dts_object
         const char * dts_name
-        long bla
+        long dts_id
 
     # from dtrace.h
     ctypedef int dtrace_handle_buffered_f(const dtrace_bufdata_t * buf_data, void * arg)
