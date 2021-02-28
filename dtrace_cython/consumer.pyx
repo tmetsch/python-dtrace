@@ -91,7 +91,7 @@ cdef int walk(const dtrace_aggdata_t * data, void * arg) with gil:
 
         # TODO: need to extend this.
         if rec.dtrd_size == sizeof(uint64_t):
-            keys.append((<int32_t *>address)[0])
+            keys.append((<uint64_t *>address)[0])
         if rec.dtrd_size == 20 * sizeof(uint64_t):
             # case stack() has been used --> need to lookup symbols.
             for j in range(rec.dtrd_arg):
