@@ -312,7 +312,7 @@ cdef class DTraceConsumer:
         self.walk_func = noop_walk if walk_func is None else walk_func
 
         cdef int err
-        if not hasattr(self, 'handle'):
+        if self.handle == NULL:
             # ensure we only grab 1 - cython might call init twice, of more.
             self.handle = dtrace_open(3, 0, &err)
         if self.handle == NULL:
@@ -331,8 +331,9 @@ cdef class DTraceConsumer:
         """
         Release DTrace handle.
         """
-        if hasattr(self, 'handle') and self.handle != NULL:
+        if self.handle != NULL:
             dtrace_close(self.handle)
+            self.handle = NULL
 
     cpdef compile(self, str script):
         """
@@ -437,7 +438,7 @@ cdef class DTraceContinuousConsumer:
         self.script = script.encode("utf-8")
 
         cdef int err
-        if not hasattr(self, 'handle'):
+        if self.handle == NULL:
             # ensure we only grab 1 - cython might call init twice, of more.
             self.handle = dtrace_open(3, 0, &err)
         if self.handle == NULL:
@@ -456,9 +457,10 @@ cdef class DTraceContinuousConsumer:
         """
         Release DTrace handle.
         """
-        if hasattr(self, 'handle') and self.handle != NULL:
+        if self.handle != NULL:
             dtrace_stop(self.handle)
             dtrace_close(self.handle)
+            self.handle = NULL
 
     cpdef go(self):
         """
