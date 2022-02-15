@@ -10,3 +10,6 @@ of the DTrace handles.
 
 Thanks to Alexander Richardson (https://github.com/arichardson) for doing a
 huge refactoring and looking into properly supporting python3.
+
+Thanks to Konrad Witaszczyk (https://github.com/kwitaszczyk) for looking into
+properly freeing up DTrace resources.
