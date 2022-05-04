@@ -307,7 +307,7 @@ cdef class DTraceConsumer:
         """
         self.chew_func = noop_chew if chew_func is None else chew_func
         self.chewrec_func = noop_chewrec if chewrec_func is None \
-            else simple_chewrec
+            else chewrec_func
         self.out_func = noop_out if out_func is None else out_func
         self.walk_func = noop_walk if walk_func is None else walk_func
 
@@ -432,7 +432,7 @@ cdef class DTraceContinuousConsumer:
         """
         self.chew_func = noop_chew if chew_func is None else chew_func
         self.chewrec_func = noop_chewrec if chewrec_func is None \
-            else simple_chewrec
+            else chewrec_func
         self.out_func = noop_out if out_func is None else out_func
         self.walk_func = noop_walk if walk_func is None else walk_func
         self.script = script.encode("utf-8")
